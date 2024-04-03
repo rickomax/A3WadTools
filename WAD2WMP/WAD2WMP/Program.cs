@@ -8,6 +8,7 @@ using MarcelJoachimKloubert.DWAD.WADs.Lumps.Linedefs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sectors;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Things;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Vertexes;
+using static System.Collections.Specialized.BitVector32;
 
 namespace WAD2WMP
 {
@@ -25,9 +26,14 @@ namespace WAD2WMP
 
         private const string WDLHeaderTemplate = "MAP {0};\r\n";
         private const string WDLRegionTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n}}\r\n";
+        private const string WDLTextureTemplate = "TEXTURE {0} {{\r\n\tBMAPS {1};\r\n}}\r\n";
+        private const string WDLBitmapTemplate = "BMAP {0} <{1}>;\r\n";
+        private const string WDLWallTemplate = "WALL {0} {{\r\n\tTEXTURE {1};\r\n}}\r\n";
 
-        private const string DummyTextureName = "DUMMY";
-        private const string BorderRegionName = "BORDER";
+        private const string DummyBitmapFilename = "DUMMY.PCX";
+        private const string DummyBitmapName = "DUMMYBMP";
+        private const string DummyTextureName = "DUMMYTEX";
+        private const string BorderRegionName = "BORDERRGN";
 
         private static bool IsValidPath(string path)
         {
@@ -40,9 +46,9 @@ namespace WAD2WMP
         static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-            if (args.Length < 3)
+            if (args.Length < 4)
             {
-                Console.WriteLine("WAD2WMP - Usage: <Input WAD Path> <Output WMP Path> <Output WDL Path>");
+                Console.WriteLine("WAD2WMP - Usage: <Input WAD Path> <Output WMP Path> <Output WDL Path> <Force Dummy Textures Y/N>");
                 Console.ReadKey();
                 return;
             }
@@ -67,12 +73,15 @@ namespace WAD2WMP
                 Console.ReadKey();
                 return;
             }
+            var forceDummyTextures = args[3] == "Y" || args[3] == "y";
             var wmpFilename = Path.GetFileNameWithoutExtension(wmpPath);
             using (var wdlStream = File.Create(wdlPath))
             {
                 using (var wdlStreamWriter = new StreamWriter(wdlStream))
                 {
                     wdlStreamWriter.Write(WDLHeaderTemplate, wmpFilename);
+                    wdlStreamWriter.Write(WDLBitmapTemplate, DummyBitmapName, DummyBitmapFilename);
+                    wdlStreamWriter.Write(WDLTextureTemplate, DummyTextureName, DummyBitmapName);
                     wdlStreamWriter.Write(WDLRegionTemplate, BorderRegionName, DummyTextureName, DummyTextureName);
                     using (var wmpStream = File.Create(wmpPath))
                     {
@@ -105,7 +114,7 @@ namespace WAD2WMP
                                     wmpStreamWriter.Write(WMPVertexHeaderTemplate);
                                     foreach (var vertex in allVertices)
                                     {
-                                        wmpStreamWriter.Write(WMPVertexTemplate, vertex.X, vertex.Y, vertexIndex++);
+                                        wmpStreamWriter.Write(WMPVertexTemplate, -vertex.X, vertex.Y, vertexIndex++);
                                     }
 
                                     var sectorIndex = 0;
@@ -114,8 +123,8 @@ namespace WAD2WMP
                                     foreach (var sector in allSectors)
                                     {
                                         var regionName = $"REGION{sectorIndex}";
-                                        wmpStreamWriter.Write(WMPRegionTemplate, regionName, sector.FloorHeight, sector.CeilingHeight, sectorIndex++);
-                                        wdlStreamWriter.Write(WDLRegionTemplate, regionName, sector.FloorTexture, sector.CeilingTexture);
+                                        wmpStreamWriter.Write(WMPRegionTemplate, regionName,  sector.FloorHeight, sector.CeilingHeight, sectorIndex++);
+                                        wdlStreamWriter.Write(WDLRegionTemplate, regionName, forceDummyTextures ? DummyTextureName : sector.FloorTexture, forceDummyTextures ? DummyTextureName : sector.CeilingTexture);
                                     }
 
                                     var wallIndex = 0;
@@ -127,9 +136,10 @@ namespace WAD2WMP
                                         var leftSide = linedef.LeftSide;
                                         var vIndex1 = linedef.StartVertexIndex;
                                         var vIndex2 = linedef.EndVertexIndex;
-                                        var rightSideIndex = rightSide.SectorIndex + 1;
-                                        var leftSideIndex = leftSide == null ? 0 : leftSide.SectorIndex + 1;
-                                        wmpStreamWriter.Write(WMPWallTemplate, wallName, vIndex1, vIndex2, rightSideIndex, leftSideIndex, rightSide.XOffset, rightSide.YOffset, wallIndex++);
+                                        var rightSideSectorIndex = rightSide.SectorIndex + 1;
+                                        var leftSideSectorIndex = leftSide == null ? 0 : leftSide.SectorIndex + 1;
+                                        wmpStreamWriter.Write(WMPWallTemplate, wallName, vIndex1, vIndex2, leftSideSectorIndex, rightSideSectorIndex, rightSide.XOffset, rightSide.YOffset, wallIndex++);
+                                        wdlStreamWriter.Write(WDLWallTemplate, wallName, forceDummyTextures ? DummyTextureName : rightSide.MiddleTexture); //todo: select best texture
                                     }
 
                                     var thingIndex = 0;
