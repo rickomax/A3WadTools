@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using VCCCompiler;
+using WADCommon;
 
 namespace WDL2WAD
 {
@@ -15,24 +16,6 @@ namespace WDL2WAD
         private const string DecorateActorTemplate = "Actor {0} : DoomImp {1}\r\n{{\r\n  Radius {2}\r\n  States\r\n  {{\r\n\tSpawn:\r\n\t\t{3} A 1\r\n\t\tloop\r\n  }}\r\n}}";
 
         private const int BaseActorID = 10000;
-
-        private static bool IsValidPath(string path)
-        {
-            var directory = Path.GetDirectoryName(path);
-            var filename = Path.GetFileName(path);
-            var invalidChars = Path.GetInvalidFileNameChars();
-            return directory != null && filename.IndexOfAny(invalidChars) < 0;
-        }
-
-        private static ushort CalculateHash(string input)
-        {
-            var hash = 0;
-            foreach (var c in input)
-            {
-                hash = c + (hash << 6) + (hash << 16) - hash;
-            }
-            return (ushort)(hash & 0xFFFF);
-        }
 
         static void Main(string[] args)
         {
@@ -45,7 +28,7 @@ namespace WDL2WAD
             }
 
             var wdlPath = args[0];
-            if (!IsValidPath(wdlPath) || !File.Exists(wdlPath))
+            if (!Common.IsValidPath(wdlPath) || !File.Exists(wdlPath))
             {
                 Console.WriteLine($"\"{wdlPath}\" not found");
                 Console.ReadKey();
@@ -53,7 +36,7 @@ namespace WDL2WAD
             }
 
             var wadPath = args[1];
-            if (!IsValidPath(wadPath))
+            if (!Common.IsValidPath(wadPath))
             {
                 Console.WriteLine($"\"{wadPath}\" is not a valid path");
                 Console.ReadKey();
@@ -95,7 +78,7 @@ namespace WDL2WAD
                             {
                                 if (bmap.TryGetValue("File", out var bmapFile))
                                 {
-                                    var hash = BaseActorID+ CalculateHash(thing.Key);
+                                    var hash = BaseActorID + Common.CalculateHash(thing.Key);
                                     var graphicName = Path.GetFileNameWithoutExtension(bmapFile.First().First().Trim('"'));
                                     decorateStringBuilder.AppendFormat(DecorateActorTemplate, thing.Key, hash, 16f, graphicName);
                                 }

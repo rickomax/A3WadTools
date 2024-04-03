@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WDL2WAD", "..\WDL2WAD\WDL2W
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WDL2CS", "..\External\WDL2CS\code\WDL2CS.csproj", "{D128E7C3-C81F-44EF-B7BD-A30CD240DB61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WADCommon", "..\Common\Common\WADCommon.csproj", "{AD312047-F48A-4F91-8E1F-3A59FE4202C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,14 @@ Global
 		{D128E7C3-C81F-44EF-B7BD-A30CD240DB61}.Release|Any CPU.Build.0 = Release|x86
 		{D128E7C3-C81F-44EF-B7BD-A30CD240DB61}.Release|x86.ActiveCfg = Release|x86
 		{D128E7C3-C81F-44EF-B7BD-A30CD240DB61}.Release|x86.Build.0 = Release|x86
+		{AD312047-F48A-4F91-8E1F-3A59FE4202C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD312047-F48A-4F91-8E1F-3A59FE4202C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD312047-F48A-4F91-8E1F-3A59FE4202C2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AD312047-F48A-4F91-8E1F-3A59FE4202C2}.Debug|x86.Build.0 = Debug|Any CPU
+		{AD312047-F48A-4F91-8E1F-3A59FE4202C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD312047-F48A-4F91-8E1F-3A59FE4202C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD312047-F48A-4F91-8E1F-3A59FE4202C2}.Release|x86.ActiveCfg = Release|Any CPU
+		{AD312047-F48A-4F91-8E1F-3A59FE4202C2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -8,6 +8,7 @@ using MarcelJoachimKloubert.DWAD.WADs.Lumps.Linedefs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sectors;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Things;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Vertexes;
+using WADCommon;
 
 namespace WAD2WMP
 {
@@ -36,16 +37,6 @@ namespace WAD2WMP
         private const string DummyTextureName = "DUMMYTEX";
         private const string BorderRegionName = "BORDERRGN";
 
-        private const float Scale = 1f / 16f;
-
-        private static bool IsValidPath(string path)
-        {
-            var directory = Path.GetDirectoryName(path);
-            var filename = Path.GetFileName(path);
-            var invalidChars = Path.GetInvalidFileNameChars();
-            return directory != null && filename.IndexOfAny(invalidChars) < 0;
-        }
-
         static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
@@ -56,21 +47,21 @@ namespace WAD2WMP
                 return;
             }
             var wadPath = args[0];
-            if (!IsValidPath(wadPath) || !File.Exists(wadPath))
+            if (!Common.IsValidPath(wadPath) || !File.Exists(wadPath))
             {
                 Console.WriteLine($"\"{wadPath}\" not found");
                 Console.ReadKey();
                 return;
             }
             var wmpPath = args[1];
-            if (!IsValidPath(wmpPath))
+            if (!Common.IsValidPath(wmpPath))
             {
                 Console.WriteLine($"\"{wmpPath}\" is not a valid path");
                 Console.ReadKey();
                 return;
             }
             var wdlPath = args[2];
-            if (!IsValidPath(wdlPath))
+            if (!Common.IsValidPath(wdlPath))
             {
                 Console.WriteLine($"\"{wdlPath}\" is not a valid path");
                 Console.ReadKey();
@@ -119,7 +110,7 @@ namespace WAD2WMP
                                     wmpStreamWriter.Write(WMPVertexHeaderTemplate);
                                     foreach (var vertex in allVertices)
                                     {
-                                        wmpStreamWriter.Write(WMPVertexTemplate, vertex.X * Scale, vertex.Y * Scale, vertexIndex++);
+                                        wmpStreamWriter.Write(WMPVertexTemplate, vertex.X * Common.Scale, vertex.Y * Common.Scale, vertexIndex++);
                                     }
 
                                     var sectorIndex = 0;
@@ -128,7 +119,7 @@ namespace WAD2WMP
                                     foreach (var sector in allSectors)
                                     {
                                         var regionName = $"TREGION{sectorIndex}";
-                                        wmpStreamWriter.Write(WMPRegionTemplate, regionName,  sector.FloorHeight * Scale, sector.CeilingHeight * Scale, sectorIndex++);
+                                        wmpStreamWriter.Write(WMPRegionTemplate, regionName,  sector.FloorHeight * Common.Scale, sector.CeilingHeight * Common.Scale, sectorIndex++);
                                         wdlStreamWriter.Write(WDLRegionTemplate, regionName, forceDummyTextures ? DummyTextureName : sector.FloorTexture, forceDummyTextures ? DummyTextureName : sector.CeilingTexture, sector.LightLevel == 0 ? 0f :sector.LightLevel / 255f);
                                     }
 
@@ -153,7 +144,7 @@ namespace WAD2WMP
                                     {
                                         if (thing.Type == 1)
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", thing.X * Scale, thing.Y * Scale, thing.Angle, FindRegion(thing), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing), thingIndex++);
                                         }
                                     }
 
