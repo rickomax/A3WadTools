@@ -12,7 +12,7 @@ namespace VCCCompiler
     /// <summary>
     /// Zusammenfassung für MyCompiler.
     /// </summary>
-    class WDLCompiler
+    public class WDLCompiler
     {
         List<int> tList = new List<int>();
         List<Regex> rList = new List<Regex>();
