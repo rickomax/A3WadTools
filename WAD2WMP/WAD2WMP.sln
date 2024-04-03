@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WAD2WMP", "WAD2WMP\WAD2WMP.csproj", "{07266ADD-9E86-41D2-AE71-0F16C8FC2FC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarcelJoachimKloubert.DWAD", "..\External\dwad-net\MarcelJoachimKloubert.DWAD\MarcelJoachimKloubert.DWAD.csproj", "{0C878352-4AB1-49F4-BEEA-9AA82A48A86C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{07266ADD-9E86-41D2-AE71-0F16C8FC2FC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07266ADD-9E86-41D2-AE71-0F16C8FC2FC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07266ADD-9E86-41D2-AE71-0F16C8FC2FC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07266ADD-9E86-41D2-AE71-0F16C8FC2FC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C878352-4AB1-49F4-BEEA-9AA82A48A86C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C878352-4AB1-49F4-BEEA-9AA82A48A86C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C878352-4AB1-49F4-BEEA-9AA82A48A86C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C878352-4AB1-49F4-BEEA-9AA82A48A86C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CD40996D-B2A3-47D4-944E-CA33251E8D29}
+	EndGlobalSection
+EndGlobal
