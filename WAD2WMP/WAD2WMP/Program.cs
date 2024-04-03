@@ -8,7 +8,6 @@ using MarcelJoachimKloubert.DWAD.WADs.Lumps.Linedefs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sectors;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Things;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Vertexes;
-using static System.Collections.Specialized.BitVector32;
 
 namespace WAD2WMP
 {
@@ -24,12 +23,14 @@ namespace WAD2WMP
         private const string WMPRegionTemplate = "REGION\t{0}\t{1}\t{2};#{3}\r\n";
         private const string WMPThingTemplate = "{0}\t{1}\t{2}\t{3}\t{4};#{5}\r\n";
 
-        private const string WDLHeaderTemplate = "MAP {0};\r\n";
+        private const string WDLHeaderTemplate = "VIDEO 320x200;\r\nMAPFILE <{0}.WDL>;\r\nBIND <{1}.WDL>;\r\nNEXUS 50;\r\nCLIP_DIST 200;\r\nLIGHT_ANGLE 1.0;\r\n";
         private const string WDLRegionTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n}}\r\n";
         private const string WDLTextureTemplate = "TEXTURE {0} {{\r\n\tBMAPS {1};\r\n}}\r\n";
         private const string WDLBitmapTemplate = "BMAP {0} <{1}>;\r\n";
         private const string WDLWallTemplate = "WALL {0} {{\r\n\tTEXTURE {1};\r\n}}\r\n";
+        private const string WDLPaletteTemplate = "PALETTE MAINPAL{{\r\n\tPALFILE <{0}>;\r\n\tRANGE 2, 254;\r\n\tFLAGS AUTORANGE;\r\n}}\r\n";
 
+        private const string DefaultPaletteFilename = "PALETTE.PCX";
         private const string DummyBitmapFilename = "DUMMY.PCX";
         private const string DummyBitmapName = "DUMMYBMP";
         private const string DummyTextureName = "DUMMYTEX";
@@ -75,11 +76,13 @@ namespace WAD2WMP
             }
             var forceDummyTextures = args[3] == "Y" || args[3] == "y";
             var wmpFilename = Path.GetFileNameWithoutExtension(wmpPath);
+            var wdlFilename = Path.GetFileNameWithoutExtension(wdlPath);
             using (var wdlStream = File.Create(wdlPath))
             {
                 using (var wdlStreamWriter = new StreamWriter(wdlStream))
                 {
-                    wdlStreamWriter.Write(WDLHeaderTemplate, wmpFilename);
+                    wdlStreamWriter.Write(WDLHeaderTemplate, wmpFilename, wdlFilename);
+                    wdlStreamWriter.Write(WDLPaletteTemplate, DefaultPaletteFilename);
                     wdlStreamWriter.Write(WDLBitmapTemplate, DummyBitmapName, DummyBitmapFilename);
                     wdlStreamWriter.Write(WDLTextureTemplate, DummyTextureName, DummyBitmapName);
                     wdlStreamWriter.Write(WDLRegionTemplate, BorderRegionName, DummyTextureName, DummyTextureName);
