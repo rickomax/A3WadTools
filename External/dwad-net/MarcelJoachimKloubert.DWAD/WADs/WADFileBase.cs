@@ -241,16 +241,12 @@ namespace MarcelJoachimKloubert.DWAD.WADs
                         break;
                 }
 
-                if (lumpType != null)
-                {
-                    var result = (UnknownLump)Activator.CreateInstance(lumpType);
-                    result.File = file;
-                    result.Name = lumpName;
-                    result.Position = lumpPos;
-                    result.Size = lumpSize;
-
-                    yield return result;
-                }
+                var result = (UnknownLump)Activator.CreateInstance(lumpType);
+                result.File = file;
+                result.Name = lumpName;
+                result.Position = lumpPos;
+                result.Size = lumpSize;
+                yield return result;
             }
         }
 

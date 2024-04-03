@@ -24,7 +24,7 @@ namespace WAD2WMP
         private const string WMPThingTemplate = "{0}\t{1}\t{2}\t{3}\t{4};#{5}\r\n";
 
         private const string WDLHeaderTemplate = "VIDEO 320x200;\r\nMAPFILE <{0}.WMP>;\r\nBIND <{1}.WDL>;\r\nNEXUS 50;\r\nCLIP_DIST 1000;\r\nLIGHT_ANGLE 1.0;\r\n";
-        private const string WDLRegionTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n}}\r\n";
+        private const string WDLRegionTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n\tAMBIENT {3};\r\n}}\r\n";
         private const string WDLTextureTemplate = "TEXTURE {0} {{\r\n\tBMAPS {1};\r\n}}\r\n";
         private const string WDLBitmapTemplate = "BMAP {0} <{1}>;\r\n";
         private const string WDLWallTemplate = "WALL {0} {{\r\n\tTEXTURE {1};\r\n}}\r\n";
@@ -87,7 +87,7 @@ namespace WAD2WMP
                     wdlStreamWriter.Write(WDLPaletteTemplate, DefaultPaletteFilename);
                     wdlStreamWriter.Write(WDLBitmapTemplate, DummyBitmapName, DummyBitmapFilename);
                     wdlStreamWriter.Write(WDLTextureTemplate, DummyTextureName, DummyBitmapName);
-                    wdlStreamWriter.Write(WDLRegionTemplate, BorderRegionName, DummyTextureName, DummyTextureName);
+                    wdlStreamWriter.Write(WDLRegionTemplate, BorderRegionName, DummyTextureName, DummyTextureName, 1f);
                     using (var wmpStream = File.Create(wmpPath))
                     {
                         using (var wmpStreamWriter = new StreamWriter(wmpStream))
@@ -129,7 +129,7 @@ namespace WAD2WMP
                                     {
                                         var regionName = $"TREGION{sectorIndex}";
                                         wmpStreamWriter.Write(WMPRegionTemplate, regionName,  sector.FloorHeight * Scale, sector.CeilingHeight * Scale, sectorIndex++);
-                                        wdlStreamWriter.Write(WDLRegionTemplate, regionName, forceDummyTextures ? DummyTextureName : sector.FloorTexture, forceDummyTextures ? DummyTextureName : sector.CeilingTexture);
+                                        wdlStreamWriter.Write(WDLRegionTemplate, regionName, forceDummyTextures ? DummyTextureName : sector.FloorTexture, forceDummyTextures ? DummyTextureName : sector.CeilingTexture, sector.LightLevel == 0 ? 0f :sector.LightLevel / 255f);
                                     }
 
                                     var wallIndex = 0;
