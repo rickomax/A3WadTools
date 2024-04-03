@@ -51,17 +51,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\Common\WADCommon.csproj">
-      <Project>{AD312047-F48A-4F91-8E1F-3A59FE4202C2}</Project>
-      <Name>WADCommon</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\External\dwad-net\MarcelJoachimKloubert.DWAD\MarcelJoachimKloubert.DWAD.csproj">
       <Project>{0c878352-4ab1-49f4-beea-9aa82a48a86c}</Project>
       <Name>MarcelJoachimKloubert.DWAD</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\External\WDL2CS\code\WDL2CS.csproj">
-      <Project>{d128e7c3-c81f-44ef-b7bd-a30cd240db61}</Project>
-      <Name>WDL2CS</Name>
+    <ProjectReference Include="..\..\WADCommon\WADCommon\WADCommon.csproj">
+      <Project>{ad312047-f48a-4f91-8e1f-3a59fe4202c2}</Project>
+      <Name>WADCommon</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

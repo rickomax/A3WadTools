@@ -52,7 +52,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Common\Common\WADCommon.csproj">
+    <ProjectReference Include="..\..\WADCommon\WADCommon\WADCommon.csproj">
       <Project>{AD312047-F48A-4F91-8E1F-3A59FE4202C2}</Project>
       <Name>WADCommon</Name>
     </ProjectReference>
