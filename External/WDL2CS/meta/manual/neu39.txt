@@ -1,0 +1,683 @@
+/////////////////////////////////////////////////////////////////
+>>>  ACKNEX Spring 1998 Release - neue Features (05-15-1998)  <<<
+/////////////////////////////////////////////////////////////////
+Hinweis fuer Updates
+
+   Falls Sie von einer frueheren GameStudio-Version updaten, seien
+   Sie auf fogendes hingsewiesen:
+
+   Manche Syntax- und Arithmetik-Fehler in RULE-Anweisungen wurden von
+   frueheren Versionen ignoriert, jedoch nicht mehr ab V3.9. Wenn Sie
+   also eine "division by zero"-Fehlermeldung beobachten, ueberpruefen
+   Sie das angegebene Skript. Begrenzen Sie die Werte von Dividend und
+   Divisor so, dass das Resultat einer Division niemals einen Wert von
+   +/- 2,000,000 ueberschreitet.
+
+/////////////////////////////////////////////////////////////////
+Windows 95 / DirectX support
+
+   Das ACKNEX Runtime-Module (WWRUN.EXE) ist nun eine 'echtes' Windows
+   95-Programm, und unterstuetzt DirectX 5 im Fullscreen- und
+   Window-Modus. DirectX 5 muss dazu auf dem PC installiert sein. Es
+   ist auf der Microsoft Site oder auf jeder Spielemagazin-CD-ROM
+   verfuegbar. Das DOS Runtime-Modul (WRUN.EXE) ist als Alternative
+   immer noch verfuegbar. Der Level-Editor WED ist immer noch ein
+   DOS-Programm, laeuft aber auch unter Windows 95.
+
+   Das Windows 95 Runtime-Module unterstuetzt die gleichen
+   Befehlszeilen-Optionen wie die DOS-Version, und kann auf die gleiche
+   Weise auch aus einer DOS-BOX heraus gestartet werden. Zu beachten
+   ist, dass unter Windows die Farbe 0 der Palette immer schawrz und
+   die letzte Farbe (255) immer weiss sein muss. Die Aufloesung 320x400
+   wird von den DirectX Treibern einiger VGA-Karten nicht unterstuetzt.
+   320x200, 640x480 und 800x600 sollten mit jeder Karte funktionieren.
+   Ausserdem unterstuetzt die Windows 95-Version jetzt 16-Bit WAV
+   Dateien.
+
+   Per [Alt-Return] kann man zwischen Fullscreen- und Window-Modus
+   umschalten. Die Befehlszeilen-Option -WND startet immer im
+   Window-Modus. WWRUN.EXE benoetigt die Definitionsdateien WWRUN.WDF
+   und WWRUN.MDF im gleichen Verzeichnis.
+
+/////////////////////////////////////////////////////////////////
+COMPILE & PUBLISH
+
+   Die PUBLISH-Funktion zum Generieren eines Runtime-Moduls ist nun
+   auch in der Lite-Version (WEDS) verfuegbar. Sie erzeugt zwei EXE
+   Dateien: WRUN.EXE fuer DOS, und WWRUN.EXE fuer Windows 95. Die
+   Profi-Version erzeugt bei Kompilieren einer Resource- Datei
+   gleichzeitig das DOS-Modul VRUN.EXE und das Windows-Modul WVRUN.EXE.
+
+   Die Lizenzbedingungen wurden gelockert. Alle Games, die keine
+   Polygon-Objekte und weniger als 1500 Objekte pro Level beinhalten,
+   sind nun lizenzfrei - unabhaengig von der Anzahl der Level.
+
+   Auch bei lizenzpflichtigen Games muss die Resource-Datei nicht mehr
+   zur Anpassung des Runtime-Moduls an CONITEC eingeschickt werden. Bei
+   jedem Compilieren einer WRS-Datei zeigt WED einen 5stelligen "Magic
+   Key" an. Dieser Magic Key genuegt CONITEC zur Lieferung eines
+   Runtime Moduls. ACHTUNG: WRS-Datei nicht loeschen! Bei jedem
+   Neucompilieren - auch wenn am Level nichts veraendert wurde - kann
+   sich der Magic Key aendern.
+
+   Die WED-Optionen -ct und -xt wirken wie -c und -x; allerdings werden
+   saemtliche Dateien compiliert bzw. kopiert, auch solche, die in der
+   WDL-Datei durch IFDEF bzw. IFNDEF uebersprungen werden. Auf diese
+   Weise lassen sich mehrere Versionen eines Levels in eine einzige
+   Resource-Datei kompilieren. Der Button "All IFDEF's" im Compile-
+   Dialogfenster hat die gleiche Funktion.
+
+WEX
+
+   .FLI, .WAV oder .PCX-Dateien mit der Extension ".WEX" werden
+   vom Runtime-Modul zuerst im aktuellen Verzeichnis und dann erst
+   in der Resource-Datei gesucht. Auf diese Weise lssen sich auch bei
+   einem fertig compilierten Game nachtraeglich bestimmte Animationen,
+   Grafiken und Sounds veraendern.
+
+/////////////////////////////////////////////////////////////////
+Netzwerk und Modem-Unterstuetzung (nur Profi-Windows-Version)
+
+   Anstelle eines Nullmodem-Kabels kann nun der 2-Player Modus auch
+   per Netzwerk (IPX oder TCP/IP-Protokoll) sowie per Modem gespielt
+   werden. Hierzu muss mit "-NODE 0" oder "-NODE 1" gestartet werden.
+   Folgende Parameter bestimmen die Verbindungsart:
+
+   -COM n fuer eine Verbindung ueber ein serielles Nullmodem-Kabel
+   -MODEM fuer eine Verbindung ueber Modem. Geben Sie das Modem und
+          die Telefonnummer in die nach Spielstart erscheinende Box ein.
+   -TCP   fuer eine Netzwerk- oder Internet-Verbindung ueber TCP/IP
+          Protokoll; geben Sie die Server-Adresse der Session in
+	     die nach Spielstart erscheinende Box ein.
+   -IPX   fuer eine Netzwerk-Verbindung per IPX Protokoll (z.B.
+          Novell).
+
+   Nach dem Start ueberprueft die Engine, ob bereits eine
+   ACKNEX-Session auf dem aktuellen Netzwerk laeuft. Wenn ja, meldet
+   sie sich bei der betreffenden Session an. Andernfalls wird eine neue
+   Session eroeffnet.
+
+   Um den 2-Player-Modus per Netzwerk auszuprobieren, tun Sie folgendes:
+   - Definieren Sie zwei actors, den ersten mit TARGET NODE0, den
+     zweiten mit TARGET NODE1, und plazieren Sie sie im Level
+   - Erzeugen Sie ein Windows-Runtime Modul per PUBLISH
+   - Starten Sie auf dem ersten PC mit WWRUN levelname -NODE 0 -IPX,
+     warten Sie bis das Game laeuft, dann starten Sie mit WWRUN
+     levelname -NODE 1 -IPX auf dem zweiten PC.
+
+3D Shutterbrillen (nur Profi-Windows-Version)
+
+   Mit der Startoption "-3D_SIMEYE" werden SIMULEYES-Shutterbrillen
+   (Stereoscopic Mode) unterstuetzt. Mit dem vordefinierten Skill
+   EYE_DIST (default=0.5) kann dabei der Augen-Abstand fuer den
+   3D-Effekt eingestellt werden. Bei aktivem Stereoscopic Mode halbiert
+   sich allerdings die effektive Frame-Rate. Damit die Shutter-Brille
+   funktioniert, muss der DirectX 5 Treiber der Grafikkarte den
+   Stereoscopic Mode unterstuetzen.
+
+800x600
+
+   Mit der Angabe "VIDEO S800x600;" wird eine Bildschirmaufloesung von
+   800x600 Bildpunkten aktiviert (nur Profi-Version).
+
+Mehrere Fenster (nur Commercial- und Profi-Version)
+
+   Um Rueckspiegel, Raketen-Kameras oder den Blick eines Actors
+   oder eines zweiten Spielers darzustellen, koennen nun mit der
+   VIEW-Definition beliebig viele 3D-Fenster am Bildschirm sichtbar
+   gemacht werden:
+
+   VIEW viewname { ... }
+
+   Innerhalb der VIEW-Definition gibt es folgende Schluesselworte:
+
+   POS_X  x;
+   POS_Y  y;
+      Die obere linke Ecke des Fensters in Bildschirm-
+	 Pixelkoordinaten. Hier fuer gelten die gleichen Einschraenkungen
+	 wie fuer SCREEN_X, SCREEN_Y.
+
+   SIZE_X dx;
+   SIZE_Y dy;
+      Die Breite und Hoehe des Fensters in Pixeln.
+
+   GENIUS actorname;
+      Das Schluesselwort des Tings oder Actors, dessen Blickwinkel
+	 dargestellt werden soll.
+
+   FLAGS  VISIBLE;
+      Damit der View sichtbar ist.
+
+   Der betreffende Actor sollte das FAR-Flag gesetzt haben. Beispiel
+   fuer eine horizontale Unterteilung des Bildschirms:
+
+   ASPECT   0.5;              // to get the right proportions
+
+   SKILL SCREEN_X { VAL 0; }  // 1st View, upper half of screen
+   SKILL SCREEN_Y { VAL 0; }
+   SKILL SCREEN_WIDTH { VAL 640; }  // SVGA mode only!
+   SKILL SCREEN_HGT   { VAL 240; }
+
+   VIEW my_view {
+      POS_X    0;          // 2nd View, lower half
+      POS_Y    240;
+      SIZE_X   640;
+      SIZE_Y   240;
+      GENIUS   my_actor;   // You'll be looking through his eyes
+      FLAGS    VISIBLE;
+   }
+
+DITHER
+
+   Durch 'Dithering' sind nun die Licht- und Schattenverlaeufe
+   wesentlich sanfter als frueher. Ist dies nicht erwuenscht, kann
+   durch das Schluesselwort "DITHER 0;" am Anfang der WDL-Datei dieser
+   Effekt abgeschaltet werden.
+
+LAYER
+
+   PANEL-, OVERLAY-, TEXT- und VIEW-Elemente haben nun einheitlich das
+   Flag VISIBLE und den Parameter LAYER. Elemente, deren VISIBLE-Flag
+   gesetzt ist, werden auf dem Bildschirm dargestellt, wobei sich ihre
+   Reihenfolge aus dem LAYER-Parameter (default=0) ergibt. Elemente mit
+   groesserem LAYER-Wert werden ueber Elementen mit kleinerem LAYER
+   dargestellt. LAYER kann waehrend des Spiels nicht veraendert werden.
+   Die Reihenfolge der Automap wird ueber den Skill MAP_LAYER bestimmt.
+
+   Damit koennen jetzt beliebig viele Elemente am Bildschirm
+   dargestellt werden. Die bisherigen 16-Element-Listen PANELS, LAYERS,
+   MESSAGES werden ueberfluessig.
+
+/////////////////////////////////////////////////////////////////
+RULE
+
+   Die RULE-Anweisung unterstuetzt nun ausser den Grundrechenarten
+   explizite mathematische Funktionen:
+
+   SIN(x),COS(x),TAN(x)  -> trigonometrische Funktionen
+   ASIN(x),ACOS(x)       -> inverse trigonometrische Funktionen
+   SQRT(x)  -> Quadratwurzel von x
+   SIGN(x)  -> -1 wenn (x<0), 1 wenn (x>0), 0 wenn (x==0)
+   ABS(x)   -> Betrag von x
+   INT(x)   -> Ganzzahliger Wert von x
+   EXP(x)   -> e hoch x
+   LOG(x),LOG10(x),LOG2(x) -> Logarithmus von x
+   RANDOM(x) -> Zufallszahl zwischen 0 und x
+
+   Beispiel: RULE z=RANDOM(4+z)*8;
+
+   Zu beachten ist, dass ungueltige Operationen - z.B. die
+   Quadratwurzel aus einer negativen Zahl - zum Abbruch mit
+   Fehlermeldung fuehren!
+
+   Ausser den binaeren Operatoren + - * / werden jetzt zusaetzlich
+   folgende Operatoren unterstuetzt (nur fuer ganzzahlige Werte):
+
+   %  -> Modulo (ganzzahliger Rest bei Division)
+   |  -> Bitweise ODER-Verknuepfung
+   ^  -> Bitweise Exclusive ODER-Verknuepfung
+   &  -> Bitweise UND-Verknuepfung
+
+   Beispiel: RULE z = x%10;
+
+   Anstelle der alten ADD, SUB-Anweisungen koennen in RULEs jetzt auch
+   die C/JAVA-Operatoren +=, -=, *=, /= benutzt werden.
+
+   Beispiel: RULE z += 1;  erhoeht den Skill z um 1.
+
+
+IF, WHILE
+
+   Die lang erwarteten C/JAVA-aehnlichen IF- und WHILE-Anweisungen zur
+   bedingten Ausfuehrung mehrerer Anweisungen auf einmal wurden
+   implementiert:
+
+   IF (rule) {...}
+   IF (rule) {...} ELSE {...}
+      fuehrt die zwischen den ersten geschweiften Klammern stehenden
+	 Anweisungen nur dann aus, wenn der zwischen den runden Klammern
+	 stehende mathematische Ausdruck (rule) einen Wert ungleich 0
+	 ergibt. Ansonsten werden die zwischen den zweiten geschweiften
+	 Klammern (hinter ELSE) stehenden Anweisungen ausgefuehrt. ELSE
+	 und die zweiten geschweiften Klammern koennen auch weggelassen
+	 werden.
+
+   WHILE (rule) {...}
+      fuehrt die zwischen den geschweiften Klammern stehenden
+	 Anweisungen wiederholt aus, solange der zwischen den runden
+	 Klammern stehende mathematische Ausdruck (rule) einen Wert
+	 ungleich 0 ergibt. Der Ausdruck wird dazu vor jeder Wiederholung
+	 neu ausgewertet. Die Anweisung BREAK; innerhalb der geschweiften
+	 Klammern beendet die Wiederholungen und faehrt mit der
+	 Ausfuehrung der ersten Anweisung nach der geschlossenen Klammer
+	 fort. Die Anweisung CONTINUE; innerhalb der geschweiften Klammern
+	 beginnt sofort mit einer neuen Wiederholung.
+
+   Bis zu 50 IF- oder WHILE-Anweisungen koennen ineinander
+   'verschachtelt' werden. Fuer die Auswertung des Ausdrucks (rule)
+   stehen folgende Operatoren zum Vergleich zweier mathematischer
+   Ausdruecke zur Verfuegung:
+
+   ||   Wahr (ungleich 0), wenn einer der beiden Ausdruecke wahr ist
+   &&   Wahr, wenn beide Ausdruecke wahr sind
+   !=   Wahr, wenn beide Ausdruecke ungleich sind
+   ==   Wahr, wenn beide Ausdruecke gleich sind
+   <=   Wahr, wenn der 1. Ausdruck kleiner oder gleich dem 2. ist
+   >=   Wahr, wenn der 1. Ausdruck groesser oder gleich dem 2. ist
+   <    Wahr, wenn der 1. Ausdruck kleiner als der 2. ist
+   >    Wahr, wenn der 1. Ausdruck groesser als der 2. ist
+
+   Es lassen sich auch Flags und Texturen vergleichen, diese aber nur
+   mit den == und != Operatoren. Alle Vergleiche ergeben einen Wert von
+   0 fuer falsch (nicht zutreffend) oder einen Wert von 1 fuer wahr
+   (zutreffend). Beispiele:
+
+   alte Methode:
+     IF_BELOW x,0; // wenn x kleiner als 0, setze y und z auf -1
+       GOTO l1;
+     RULE y=1;     // sonst setze y und z auf 1
+     RULE z=1;
+     GOTO l2;
+   l1:
+     RULE y=-1;
+     RULE z=-1;
+   l2:
+
+   neue Methode:
+   IF (x<0) {   // wenn x kleiner als 0, setze y und z auf -1
+     RULE y=-1;
+     RULE z=-1;
+   } ELSE {
+     RULE y=1;  // sonst setze y und z auf 1
+     RULE z=1;
+   }
+
+   IF (((x+3)<9) || (y>0)) {
+   // wenn x+3 kleiner als 9, oder wenn y positiv ist
+     RULE z=10;
+     BEEP;
+   }
+   WHILE (z>0) {
+   // solange z groesser als 0 ist
+     RULE x=x-y;
+     IF (x==0) {
+       BREAK;   // Abbruch, wenn x = 0
+     }
+     RULE z=z-1;
+     WAIT 1;
+   }
+
+
+NEXT_MY, NEXT_THERE, NEXT_MY_THERE
+
+   Die Anweisung NEXT_MY setzt das Synonym MY auf das naechste Objekt
+   gleichen Namens. Die Anweisung NEXT_THERE setzt das Synonym THERE
+   auf die naechste Region gleichen Namens. Die Anweisung NEXT_MY_THERE
+   setzt das Synonym MY auf das naechste Objekt in der gleichen Region.
+
+EXCLUSIVE
+
+   Die EXCLUSIVE-Anweisung beendet saemtliche noch laufenden Aktionen,
+   die von dem ausloesenden Objekt (Wall, Thing, Actor, Region) frueher
+   ausgeloest wurden, bzw. (bei IF_(Key)-Aktionen) saemtliche noch
+   laufenden Aktionen gleichen Namens. Diese Anweisung kann benutzt
+   werden, um zu verhindern, dass mehrere Aktionen des gleichen Actors
+   parallel laufen und sich gegenseitig stoeren.
+
+/////////////////////////////////////////////////////////////////
+3D-Waffen
+
+   Das neue TARGET HOLD bewirkt, dass ein polygonaler (MDL-)Actor
+   immer direkt vor dem Player plaziert wird, unabhaengig von dessen
+   Position und Winkel. 3D-Waffen oder Werkzeuge koennen auf diese
+   Weise definiert werden. Die Ausrichtung des Actors wird von seinem
+   ANGLE, seine Position relativ zum Player von seinen HEIGHT, TARGET_X
+   und TARGET_Y Parametern bestimmt. Beispiel:
+
+   MODEL sword_mod,<sword.mdl>;
+   TEXTURE sword_tex {
+   	SCALE_X  32;
+   	SCALE_Y  32;
+   	MODEL    sword_mod;
+   }
+   ACTOR sword_arm {
+   	TEXTURE  sword_tex;
+   	TARGET   HOLD;
+   	ANGLE    3.14;
+   	TARGET_X 1.0;
+   	TARGET_Y 2.0;
+   	HEIGHT   -1.0;
+   }
+
+   Es darf nur ein HOLD-Actor sichtbar sein. Es koennen mehrere
+   definiert werden, doch die unbenutzten muessen INVISIBLE gesetzt
+   werden.
+
+Einschussloecher
+
+   Die Skills HIT_X und HIT_Y werden jetzt auch bei Waenden gesetzt.
+   Sie koennen benutzt werden, um z.B. Einschussloecher darzustellen.
+   Beispiel (nur 1 Loch!):
+
+   BMAP    hole_map,<hole.pcx>;
+   TEXTURE hole_tex { BMAP hole_map; }
+   SYNONYM last_hitobj { TYPE WALL; }
+
+   ACTION set_hole {
+     SHOOT;
+     IF (HIT == NULL) {         // nothing hit?
+       END;
+	}
+     IF (last_hitobj != NULL) { // something hit before?
+       SET  last_hitobj.ATTACH,NULL;
+	}                          // remove hole from last wall
+     SET  HIT.ATTACH,hole_tex;  // and place it onto new
+     SET  last_hitobj,HIT;
+     SET  hole_tex.POS_X,HIT_X;
+     SET  hole_tex.POS_Y,HIT_Y;
+   }
+
+   Es ist auch moeglich, mehrere Einschussloecher zu plazieren. Die
+   HOLE.WDL Datei im SKAPH Verzeichnis enthaelt den Code fuer 100
+   Loecher.
+
+LEFT, RIGHT
+
+   Die linke und rechte Region einer Wall kann nun mit den
+   Wall-Parametern LEFT und RIGHT ausgewertet bzw. einem Synonym
+   zugewiesen werden.
+
+TOP, BELOW
+
+   In Aktionen kann mit dem Regions-Parameter BELOW die BELOW-Region,
+   mit dem Regions-Parameter TOP die hoechste darueberliegende Region
+   ausgewertet werden. Hat eine Region keine BELOW-Region, so ist ihr
+   TOP-Parameter die Region selbst, ihr BELOW-Parameter ist NULL. Beide
+   Parameter duerfen nur gelesen, nicht veaendert werden (sonst:
+   Absturz!).
+
+THING, ACTOR
+
+   Ueber die Objekt-Flags THING und ACTOR laesst sich abfragen, ob das
+   betreffende Synonym (z.B. HIT) ein THING oder ein ACTOR ist.
+
+IMPASSABLE
+
+   Bei Things und Actors kann jetzt ebenfalls das IMPASSABLE-Flag
+   gesetzt werden.
+
+MASTER
+
+   Wenn bei einem Actor die Flags MASTER und CAREFULLY gesetzt sind,
+   loest er - wie der Player - IF_LEAVE, IF_ENTER und IF_NEAR Aktionen
+   aus. Bitte beachten: IF_NEAR mit einer DIST > 0 funktioniert hier
+   nicht, der Actor muss die Wand bzw. das Objekt direkt durchqueren
+   oder beruehren, um die Aktion auszuloesen.
+
+FAR
+
+   Wenn bei einem Actor das FAR-Flag gesetzt ist, bewegt er sich nun
+   kontinuierlich unabhaengig von SKIP_FRAMES.
+
+WAY
+
+   Ein Actor laueft einen WAY jetzt in umgekehrter Richtung ab, wenn
+   seine SPEED negativ ist. Folgende Anweisungen bewegen ihn zu einer
+   spontanen Umkehr:
+
+   RULE MY.SPEED *= -1;
+   IF (MY.SPEED>0)
+   { RULE MY.WAYPOINT += 1; }
+   ELSE
+   { RULE MY.WAYPOINT -= 1; }
+
+
+LIGHTMAP
+
+   Das Textur-Flag LIGHTMAP bewirkt bei ATTACH-Texturen eine Licht- und
+   Schatten-Modulation von WALL-Oberflaechen. Die betreffende Bitmap
+   darf nur die Farben #0..#15 und #241..#255 enthalten (sonst:
+   Absturz!!). Die Farbe #0 ist transparent, die Farben #1..#15 dunkeln
+   die WALL ab, waehrend die Farben #255..#241 sie aufhellen. Beim
+   Aufhellen entspricht die hellste Farbe (#241) der Farbe #2 der
+   Palette, die weiss oder hellgelb sein sollte. Beispiel:
+
+   BMAP torch_map,<torchlight.pcx>;
+   TEXTURE torch_tex {
+      SCALE_XY 16,16;
+      BMAPS    torch_map;
+      FLAGS    LIGHTMAP;
+      POS_X    40;
+      POS_Y    10;
+   }
+   WALL stone_wall {
+      TEXTURE  stone_tex;
+      ATTACH   torch_tex;
+   }
+
+/////////////////////////////////////////////////////////////////
+SET_INFO
+
+   Die Anweisung "SET_INFO string,object;" ist der eingebaute Debugger;
+   sie schreibt alle Parameter des angegebenen Objekts (Wall, Thing,
+   oder Actor) als Klartext in den String. Der String sollte mindestens
+   1000 Zeichen lang sein, um alle Informationen unterzubringen. Diese
+   Anweisung steht nur im WED, nicht im Runtime-Modul zur Verfuegung.
+
+   Beispiel fuer ein Debug-Modul, welches bei Mausklick rechts
+   das Spiel 'einfriert' und einen Mauspfeil erscheinen laesst.
+   Der Zustand des zuletzt damit angeklickten Objekts wird dann
+   permanent auf dem Bildschirm dargestellt:
+
+   //////////////////////////////////////////////////////////
+   // At first the code to switch on and move the mouse:
+   OVLY		mouse_ovr,<arrow.pcx>;
+   OVERLAY	mouse_sprite { OVLYS mouse_ovr; }
+   MSPRITE	mouse_sprite;
+
+   ACTION mouse_toggle { 	// switches the mouse on and off
+   	RULE MOUSE_MODE += 2;
+   	IF (MOUSE_MODE > 2) {	// was it alread on?
+   	  RULE MOUSE_MODE=0;
+   	  END;
+   	}
+   	WHILE (MOUSE_MODE > 0) {
+   	  WAIT 1;               // now move it over the screen
+   	  RULE MOUSE_X += 2*MICKEY_X;
+   	  RULE MOUSE_Y += 2*MICKEY_Y;
+   	}
+   };
+   //////////////////////////////////////////////////////////
+   // Now the WDL code for showing the debugging info:
+   STRING	info_strg,"
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   "; // just a very long string
+
+   TEXT	info_txt {
+     POS_X   4;
+     POS_Y   4;
+     FONT	   debug_font;
+     STRING  info_strg;
+   }
+
+   SYNONYM check_obj { TYPE ACTOR; }
+   SKILL running { VAL 0; }
+
+   ACTION scan_obj {	// permanently update the object info
+     IF (running != 0) {
+        END;
+     }				// do nothing if action is already running
+     RULE	running=1;	// (remember, this is multitasking!)
+     WHILE (running) {
+       SET_INFO  info_strg,check_obj;
+       WAIT	  1;
+     }
+   }
+   ACTION obj_click {
+     BEEP;
+     SET	check_obj,TOUCHED;
+     SET	info_txt.VISIBLE,1;
+     CALL scan_obj;
+   }
+   ACTION freeze_unfreeze {
+     IF (MOUSE_MODE == 0) {  // if the mouse is about to appear
+        SET  MOVE_MODE,0.5;  // freeze anything
+     } ELSE {
+        SET  MOVE_MODE,1;
+     }
+     CALL	mouse_toggle;
+   }
+   IF_RIGHT  freeze_unfreeze;
+   IF_KLICK  obj_click;
+
+
+PRINTFILE
+
+   Mit den folgenden Anweisungen koennen die Werte von Skills und
+   Strings zur Laufzeit in eine Textdatei ausgegeben werden:
+
+   PRINTFILE  "name",Zahl/Skill;
+      Definiert den Namen der Textdatei, welcher sich wie bei SAVE aus
+	 dem angegebenen String (max. 5 Buchstaben) plus einer maximal
+	 dreistelligen Zahl plus der Extension .TXT zusammensetzt. Der
+	 Default-Name ist "PRINT0.TXT".
+
+   PRINT_VALUE   Skill;
+   PRINT_STRING  String;
+      Schreibt den Skill (3 Nachkommastellen) oder String in die
+	 Textdatei. Der urspruengliche Datei-Inhalt wird nicht geloescht,
+	 sondern der neue Text wird am Ende der Datei angehaengt. "\n"
+	 innerhalb des Strings schreibt einen Zeilenumbruch in die Datei.
+
+
+INKEY, STR_LEN
+
+   Bei der INKEY-Anweisung werden nun Leerzeichen am Schluss des
+   eingegebenen String abgeschnitten. Die Laenge des eingegebenen
+   Strings laesst sich ueber den vordefinierten Skill STR_LEN
+   auswerten.
+
+ADD_STRING
+
+   Wie SET_STRING, jedoch wird der zweite STRING an den ersten
+   angefuegt. Achtung: Die urspruengliche Laenge des ersten STRING darf
+   nicht durch ADD_STRING ueberschritten werden!
+
+SET_SKILL
+
+   Mit der Anweisung "SET_SKILL skill,string;" wird der Wert des
+   Skills auf die im String stehende Zahl gesetzt.
+
+TO_STRING
+
+   Die Anweisung "TO_STRING string,skill;" kopiert den Zahlenwert des
+   Skill in den betreffenden String.
+
+FIND
+
+   Mit der Anweisung "FIND text,string;" wird der OFFSET_Y und der
+   INDEX-Parameter des angegebenen TEXT auf denjenigen String gesetzt,
+   dessen erste Buchstaben dem Inhalt des angegebenen STRING
+   entsprechen. Der Skill RESULT wird ebenfalls auf den betreffenden
+   INDEX gesetzt. Wird keine Entsprechung gefunden, so wird RESULT auf
+   -1 gesetzt, und OFFSET_Y und INDEX werden nicht veraendert.
+   Nach der FIND-Ausfuehrung enthalten - unabhaengig von RESULT - die
+   Skills LINES und SIZE_Y die Anzahl der Charakter- bzw. Pixel-Zeilen
+   des gesamten TEXT.
+
+/////////////////////////////////////////////////////////////////
+TOUCH_TEXT
+
+   Ist dem vordefinierten Synonym TOUCH_TEXT ein TEXT zugewiesen,
+   erscheinen TOUCH-Texte im Font und mit den Flags des betreffenden
+   TEXT. Hat der TEXT das Flag VISIBLE, so erscheinen die Texte
+   auf dessen POS_X/POS_Y, ansonsten an der Maus.
+
+TOUCHED,TOUCH_TEX,TOUCH_REG
+
+   Das Synonym TOUCHED steht fuer das zuletzt mit der Maus beruehrte
+   Objekt, TOUCH_TEX fuer die zuletzt beruehrte Textur und TOUCH_REG
+   fuer die zuletzt beruehrte Region. Die Synonyme koennen z.B. in
+   IF_KLICK-Aktionen ausgewertet werden.
+
+CDAUDIO_VOL
+
+   Mit diesem Skill kann die CD Audio Lautstaerke im Bereich 0..1
+   eingestellt werden. Dies allerdings funktioniert nur unter DOS;
+   unter Windows 95 wird die CD Audio Lautstaerke mit dem zusammen
+   mit der Soundkarte installierten Mixer-Tool eingestellt.
+
+MAP_CENTERX, MAP_CENTERY
+
+   Mit den beiden Skills MAP_CENTERX und MAP_CENTERY laesst sich
+   aehnlich wie mit MAP_OFFSX und MAP_OFFSY der Kartenausschnitt
+   verschieben, jedoch nicht in Pixeln, sondern in Steps. Dies hat
+   den Vorteil, dass unabhaengig vom Massstab der Karte (MAP_SCALE)
+   das Zentrum immer an der gleichen Stelle bleibt.
+
+LOAD_MODE
+
+   Wird der Skill LOAD_MODE auf 1 gesetzt, so wird bei der LOAD- und
+   der LEVEL-Anweisung der Wechsel der Bildschirmaufloesung
+   unterdrueckt.
+
+/////////////////////////////////////////////////////////////////
+Tasten
+
+   Die folgenden Tasten auf US-Tastaturen koennen jetzt via  IF_(key)
+   resp. KEY_(key) benutzt werden: EQUALS, PERIOD, COMMA, BRACKL,
+   BRACKR, SEMIC, BKSL, SLASH.
+
+UNDEF
+
+   Ein per DEFINE angegebenes Schluesselwort kann mit UNDEF wieder
+   fuer alle nachfolgenden WDL-Zeilen 'undefiniert' werden.
+
+COMMAND_LINE
+
+   Mit dem String-Synonym COMMAND_LINE kann eine einzelner DEFINE-
+   Parameter an einen neuen Level, der per LEVEL-Anweisung gestartet
+   wird, per "-d"-Option uebergeben werden. Durch "-u" statt "-d" wird
+   der Parameter 'undefiniert', wenn er vorher per DEFINE definiert
+   war. Alle in der Befehlszeile angegebenen "-d"- Definitionen sind
+   ansonsten global, d.h. sie bleiben fuer alle weiteren per LEVEL oder
+   MAP gestarteten Level erhalten. Beispiel:
+
+   STRING svga_str,"-d SVGA";
+   STRING no_svga_str,"-u SVGA";
+
+   ACTION start_level_with_svga {
+      SET   COMMAND_LINE,svga_str;
+      LEVEL   <newlevel.wdl>;
+   }
+   ACTION start_level_without_svga {
+      SET   COMMAND_LINE,no_svga_str;
+      LEVEL   <newlevel.wdl>;
+   }
+
+PALANIM_DELAY
+
+   Waehrend des Spiels und Level-Ladens koennen jetzt automatisch die
+   Farbpaletten zyklisch gewechselt werden, um eine Paletten-Animation,
+   z.B. einen Ladebalken, anzuzeigen. Der vordefinierte Skill
+   PALANIM_DELAY (default=0=abgeschaltet) gibt die Zeit in Ticks
+   zwischen dem Umschalten der Paletten. Die Reihenfolge der Paletten
+   wird durch den neuen PALETTE-Parameter CYCLE angegeben; es wird
+   jeweils zu der Palette mit dem naechsthoeheren CYCLE-Wert
+   umgeschaltet. Wenn ein CYCLE-Wert 0 ist (default), wird die
+   betreffende Palette bei der Animation nicht beruecksichtigt.
+
+/////////////////////////////////////////////////////////////////

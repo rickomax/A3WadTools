@@ -1,0 +1,1352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VCC>
+    <CODETYPE value="C#"/>
+    <PARSERTYPE value="LALR(1)"/>
+    <SCANNER>
+        <READ value=";" token="Char59" color="#E1FFFF"/>
+        <READ value="\{" token="Char123" color="#E1FFFF"/>
+        <READ value="\}" token="Char125" color="#E1FFFF"/>
+        <READ value=":" token="Char58" color="#E1FFFF"/>
+        <READ value="\|\|" token="Char124Char124" color="#E1FFFF"/>
+        <READ value="&amp;&amp;" token="Char38Char38" color="#E1FFFF"/>
+        <READ value="\|" token="Char124" color="#E1FFFF"/>
+        <READ value="\^" token="Char94" color="#E1FFFF"/>
+        <READ value="&amp;" token="Char38" color="#E1FFFF"/>
+        <READ value="\(" token="Char40" color="#E1FFFF"/>
+        <READ value="\)" token="Char41" color="#E1FFFF"/>
+        <READ value="!=" token="Char33Char61" color="#E1FFFF"/>
+        <READ value="==" token="Char61Char61" color="#E1FFFF"/>
+        <READ value="&lt;" token="Char60" color="#E1FFFF"/>
+        <READ value="&lt;=" token="Char60Char61" color="#E1FFFF"/>
+        <READ value="&gt;" token="Char62" color="#E1FFFF"/>
+        <READ value="&gt;=" token="Char62Char61" color="#E1FFFF"/>
+        <READ value="\+" token="Char43" color="#E1FFFF"/>
+        <READ value="\-" token="Char45" color="#E1FFFF"/>
+        <READ value="%" token="Char37" color="#E1FFFF"/>
+        <READ value="\*" token="Char42" color="#E1FFFF"/>
+        <READ value="/" token="Char47" color="#E1FFFF"/>
+        <READ value="!" token="Char33" color="#E1FFFF"/>
+        <READ value="RULE" token="RULE" color="#E1FFFF"/>
+        <READ value="\*[\s\t\x00]*=" token="Char42Char61" color="#E1FFFF"/>
+        <READ value="\+[\s\t\x00]*=" token="Char43Char61" color="#E1FFFF"/>
+        <READ value="\-[\s\t\x00]*=" token="Char45Char61" color="#E1FFFF"/>
+        <READ value="/[\s\t\x00]*=" token="Char47Char61" color="#E1FFFF"/>
+        <READ value="=" token="Char61" color="#E1FFFF"/>
+        <READ value="ELSE" token="ELSE" color="#E1FFFF"/>
+        <READ value="IF" token="IF" color="#E1FFFF"/>
+        <READ value="WHILE" token="WHILE" color="#E1FFFF"/>
+        <READ value="\." token="Char46" color="#E1FFFF"/>
+        <READ value="NULL" token="NULL" color="#E1FFFF"/>
+        <READ value="(?=[A-Z])(MODEL|SOUND|MUSIC|FLIC|BMAP|OVLY|FONT)" token="asset" color="#E1FFFF"/>
+        <READ value="(?=[A-Z])(OVERLAY|PANEL|PALETTE|REGION|SKILL|STRING|SYNONYM|TEXTURE|TEXT|VIEW|WALL|WAY)" token="object" color="#E1FFFF"/>
+        <READ value="(?=[A-Z])(ACTION|RULES)" token="function" color="#E1FFFF"/>
+        <READ value="(?=[A-Z])(ACOS|COS|ATAN|TAN|SIGN|INT|EXP|LOG10|LOG2|LOG)" token="math" color="#E1FFFF"/>
+        <READ value="((EACH_TICK|EACH_SEC|PANELS|LAYERS|MESSAGES)\.(1[0-6]|[1-9]))" token="list" color="#E1FFFF"/>
+        <READ value="(?=[A-Z])(THING|ACTOR)" token="ambigChar95objectChar95flag" color="#E1FFFF"/>
+        <READ value="(?=[A-Z])(SIN|ASIN|SQRT|ABS)" token="ambigChar95mathChar95command" color="#E1FFFF"/>
+        <READ value="RANDOM" token="ambigChar95mathChar95skillChar95property" color="#E1FFFF"/>
+        <READ value="[0-9]+" token="integer" color="#E1FFFF"/>
+        <READ value="([0-9]*\.[0-9]+)|([0-9]+\.[0-9]*)" token="fixed" color="#E1FFFF"/>
+        <READ value="[A-Za-z0-9_][A-Za-z0-9_\?]*(\.[1-9][0-9]?)?" token="identifier" color="#E1FFFF"/>
+        <READ value="&lt;[\s]?[^&lt;;:&quot; ]+\.[^&lt;;:&quot; ]+[\s]?&gt;" token="file" color="#E1FFFF"/>
+        <READ value="&quot;(\\&quot;|.|[\r\n])*?&quot;" token="string" color="#E1FFFF"/>
+        <READ value="[\r\n\t\s\x00,]|:=|(#.*(\n|$))|(//.*(\n|$))|(/\*(.|[\r\n])*?\*/)" token="IGNORE" color="#E1FFFF"/>
+    </SCANNER>
+    <GLOBALCODE>
+        
+    </GLOBALCODE>
+    <RULES>
+        <RULE name="Start" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Sections"/>
+                <CODE>
+                    $$ = $1;
+output = Script.Format(scriptName, generatePropertyList);
+if (generatePropertyList)
+   propertyList = Script.ToList().List;
+
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Sections" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Section"/>
+                <RULE name="Sections"/>
+                <CODE>
+                    $$ = new Node ($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Keyword"/>
+                <CODE>
+                    $$ = null; //bogus keyword at EOF - just discard
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <CODE>
+                    $$ = null;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Section" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = null;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char123"/>
+                <CODE>
+                    $$ = Sections.AddDummySection($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char125"/>
+                <CODE>
+                    $$ = Sections.AddDummySection($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="GlobalDef"/>
+                <CODE>
+                    $$ = Sections.AddSection($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="ObjectDef"/>
+                <CODE>
+                    $$ = Sections.AddSection($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="FunctionDef"/>
+                <CODE>
+                    $$ = Sections.AddSection($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="AssetDef"/>
+                <CODE>
+                    $$ = Sections.AddSection($1);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="GlobalDef" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Global"/>
+                <RULE name="ObjectIdList"/>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = Globals.AddGlobal($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Global"/>
+                <RULE name="GlobalParameter"/>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = Globals.AddGlobal($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Global" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="ReducedKeyword"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatKeyword($1); //TODO: review
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="ObjectIdList" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="ObjectId"/>
+                <RULE name="ObjectIdList"/>
+                <CODE>
+                    $$ = Globals.AddParameter($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <CODE>
+                    $$ = null;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="GlobalParameter" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="String"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Number"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="File"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="AssetDef" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="AssetRef"/>
+                <RULE name="AssetId"/>
+                <RULE name="File"/>
+                <RULE name="AssetParams"/>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = Assets.AddAsset($1, $2, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="AssetParams" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="AssetParam"/>
+                <RULE name="AssetParams"/>
+                <CODE>
+                    $$ = Assets.AddParameter($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <CODE>
+                    $$ = null;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="AssetParam" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Integer"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="AssetRef" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="asset"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="ObjectDef" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Object"/>
+                <RULE name="ObjectId"/>
+                <TOKEN name="Char123"/>
+                <RULE name="PropertyDefs"/>
+                <TOKEN name="Char125"/>
+                <CODE>
+                    $$ = Objects.AddObject($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Object"/>
+                <RULE name="ObjectId"/>
+                <RULE name="String"/>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = Objects.AddStringObject($1, $2, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Object"/>
+                <RULE name="ObjectId"/>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = Objects.AddObject($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="ObjectRef" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="object"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Object" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="ambigChar95objectChar95flag"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="ObjectRef"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="PropertyDefs" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="PropertyDef"/>
+                <RULE name="PropertyDefs"/>
+                <CODE>
+                    $$ = new Node ($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <CODE>
+                    $$ = null;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="PropertyDef" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="BasicKeyword"/>
+                <RULE name="PropertyValueList"/>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = Objects.CreateProperty($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = null;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="PropertyValueList" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="PropertyValue"/>
+                <CODE>
+                    $$ = Objects.AddPropertyValue($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="PropertyValue"/>
+                <RULE name="PropertyValueList"/>
+                <CODE>
+                    $$ = Objects.AddPropertyValue($1);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="PropertyValue" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="String"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="KeywordPar"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Number"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="File"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="FunctionDef" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Function"/>
+                <RULE name="FunctionId"/>
+                <TOKEN name="Char123"/>
+                <RULE name="Instructions"/>
+                <TOKEN name="Char125"/>
+                <CODE>
+                    $$ = Actions.AddAction($2, $4);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Function" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="function"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Instructions" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="Char123"/>
+                <RULE name="Instructions"/>
+                <TOKEN name="Char125"/>
+                <RULE name="Instructions"/>
+                <CODE>
+                    $$ = new Node ($2, $4);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="GotoMarker"/>
+                <TOKEN name="Char58"/>
+                <RULE name="Instructions"/>
+                <CODE>
+                    $$ = Actions.CreateMarker($1, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Flow"/>
+                <RULE name="Instructions"/>
+                <CODE>
+                    $$ = new Node ($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Instruction"/>
+                <RULE name="Instructions"/>
+                <CODE>
+                    $$ = new Node($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <CODE>
+                    $$ = null;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Instruction" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Command"/>
+                <RULE name="ParameterList"/>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = Actions.CreateInstruction($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Rule"/>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Command"/>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = Actions.CreateInstruction($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char59"/>
+                <CODE>
+                    $$ = null;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="ParameterList" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Parameter"/>
+                <CODE>
+                    $$ = Actions.AddInstructionParameter($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Parameter"/>
+                <RULE name="ParameterList"/>
+                <CODE>
+                    $$ = Actions.AddInstructionParameter($1);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Parameter" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="KeywordPar"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="List"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="String"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Number"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="File"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Expression" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="LogicOr"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="LogicOr" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="LogicOr"/>
+                <TOKEN name="Char124Char124"/>
+                <RULE name="LogicAnd"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatOperator($1, " || ", $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="LogicAnd"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="LogicAnd" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="LogicAnd"/>
+                <TOKEN name="Char38Char38"/>
+                <RULE name="BitOr"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatOperator($1, " &amp;&amp; ", $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="BitOr"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="BitOr" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="BitOr"/>
+                <TOKEN name="Char124"/>
+                <RULE name="BitXor"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatOperator($1, " | ", $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="BitXor"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="BitXor" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="BitXor"/>
+                <TOKEN name="Char94"/>
+                <RULE name="BitAnd"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatOperator($1, " ^ ", $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="BitAnd"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="BitAnd" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="BitAnd"/>
+                <TOKEN name="Char38"/>
+                <RULE name="Equality"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatOperator($1, " &amp; ", $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Equality"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Equality" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Comparison"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Equality"/>
+                <RULE name="OpEq"/>
+                <RULE name="Comparison"/>
+                <CODE>
+                    $$ = new Node($1, $2, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Comparison" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Term"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Comparison"/>
+                <RULE name="OpCmp"/>
+                <RULE name="Term"/>
+                <CODE>
+                    $$ = new Node($1, $2, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Term" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Factor"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Term"/>
+                <RULE name="OpTerm"/>
+                <RULE name="Factor"/>
+                <CODE>
+                    $$ = new Node($1, $2, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Factor" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Unary"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Factor"/>
+                <RULE name="OpFac"/>
+                <RULE name="Unary"/>
+                <CODE>
+                    $$ = new Node($1, $2, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Unary" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Primary"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="OpUn"/>
+                <RULE name="Unary"/>
+                <CODE>
+                    $$ = new Node($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Primary" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Math"/>
+                <TOKEN name="Char40"/>
+                <RULE name="Expression"/>
+                <TOKEN name="Char41"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatMath($1, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char40"/>
+                <RULE name="Expression"/>
+                <TOKEN name="Char41"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatParentheses($2);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="integer"/>
+                <TOKEN name="integer"/>
+                <CODE>
+                    //fixes things like "18,4"
+$$ = NodeFormatter.FormatNumberPatch($1, $2); //this is what supposedly happens in A3
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Keyword"/>
+                <TOKEN name="integer"/>
+                <CODE>
+                    //fixes things like "Skill 6"
+$$ = NodeFormatter.FormatNumberPatch($2, $1); //this is what supposedly happens in A3
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="List"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Keyword"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="UnNumber"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="OpEq" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="Char33Char61"/>
+                <CODE>
+                    $$ = new Node(" != ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char61Char61"/>
+                <CODE>
+                    $$ = new Node(" == ");
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="OpCmp" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="Char60"/>
+                <CODE>
+                    $$ = new Node(" &lt; ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char60Char61"/>
+                <CODE>
+                    $$ = new Node(" &lt;= ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char62"/>
+                <CODE>
+                    $$ = new Node(" &gt; ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char62Char61"/>
+                <CODE>
+                    $$ = new Node(" &gt;= ");
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="OpTerm" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="Char43"/>
+                <CODE>
+                    $$ = new Node(" + ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char45"/>
+                <CODE>
+                    $$ = new Node(" - ");
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="OpFac" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="Char37"/>
+                <CODE>
+                    $$ = new Node(" % ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char42"/>
+                <CODE>
+                    $$ = new Node(" * ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char47"/>
+                <CODE>
+                    $$ = new Node(" / ");
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="OpUn" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="Char33"/>
+                <CODE>
+                    $$ = new Node("!");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char43"/>
+                <CODE>
+                    $$ = new Node("+");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char45"/>
+                <CODE>
+                    $$ = new Node("-");
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Rule" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="RULE"/>
+                <RULE name="Expression"/>
+                <CODE>
+                    $$ = Actions.CreateExpression($2);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="RULE"/>
+                <RULE name="Keyword"/>
+                <RULE name="OpAssign"/>
+                <RULE name="Expression"/>
+                <CODE>
+                    $$ = Actions.CreateExpression($2, $3, $4);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Keyword"/>
+                <RULE name="OpAssign"/>
+                <RULE name="Expression"/>
+                <CODE>
+                    $$ = Actions.CreateExpression($1, $2, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="OpAssign" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="Char42Char61"/>
+                <CODE>
+                    $$ = new Node(" *= ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char43Char61"/>
+                <CODE>
+                    $$ = new Node(" += ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char45Char61"/>
+                <CODE>
+                    $$ = new Node(" -= ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char47Char61"/>
+                <CODE>
+                    $$ = new Node(" /= ");
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="Char61"/>
+                <CODE>
+                    $$ = new Node(" = ");
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Math" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="ambigChar95mathChar95command"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="ambigChar95mathChar95skillChar95property"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="math"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Flow" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="ELSE"/>
+                <TOKEN name="Char123"/>
+                <RULE name="Instructions"/>
+                <TOKEN name="Char125"/>
+                <CODE>
+                    $$ = Actions.CreateElseCondition($3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="IF"/>
+                <RULE name="Expression"/>
+                <TOKEN name="Char123"/>
+                <RULE name="Instructions"/>
+                <TOKEN name="Char125"/>
+                <CODE>
+                    $$ = Actions.CreateIfCondition($2, $4);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="WHILE"/>
+                <RULE name="Expression"/>
+                <TOKEN name="Char123"/>
+                <RULE name="Instructions"/>
+                <TOKEN name="Char125"/>
+                <CODE>
+                    $$ = Actions.CreateWhileCondition($2, $4);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Keyword" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="BasicKeyword"/>
+                <TOKEN name="Char46"/>
+                <RULE name="BasicKeyword"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatKeywordProperty($1, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="BasicKeyword"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatKeyword($1);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="KeywordPar" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Keyword"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="OpUn"/>
+                <RULE name="Keyword"/>
+                <CODE>
+                    $$ = new Node($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Command" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="ELSE"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="BasicKeyword"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Number" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="Fixed"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatNumber($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Integer"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatNumber($1);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="UnNumber" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="fixed"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatNumber($1);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="integer"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatNumber($1);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Integer" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="OpUn"/>
+                <TOKEN name="integer"/>
+                <CODE>
+                    $$ = new Node($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="integer"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Fixed" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="OpUn"/>
+                <TOKEN name="fixed"/>
+                <CODE>
+                    $$ = new Node($1, $2);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="fixed"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="Identifier" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="identifier"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="List" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="list"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatList($1);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="EngineKeywords" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="ambigChar95mathChar95command"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="ambigChar95mathChar95skillChar95property"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="ambigChar95objectChar95flag"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="asset"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="function"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="math"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="object"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="BasicKeyword" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="NULL"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatNull();
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Identifier"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="EngineKeywords"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="ReducedKeyword" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="ambigChar95mathChar95command"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="math"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="Identifier"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="HackKeyword" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="identifier"/>
+                <TOKEN name="Char45"/>
+                <TOKEN name="identifier"/>
+                <CODE>
+                    $$ = new Node($1, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <TOKEN name="identifier"/>
+                <TOKEN name="Char45"/>
+                <TOKEN name="integer"/>
+                <CODE>
+                    $$ = new Node($1, $3);
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="BasicKeyword"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="ObjectId" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="HackKeyword"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="FunctionId" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="HackKeyword"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="AssetId" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="integer"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+            <RIGHTSIDE>
+                <RULE name="HackKeyword"/>
+                <CODE>
+                    $$ = $1;
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="GotoMarker" color="#FFE1FF">
+            <RIGHTSIDE>
+                <RULE name="BasicKeyword"/>
+                <CODE>
+                    $$ = $1; //TODO: FormatIdentifier?
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="File" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="file"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatFile($1);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+        <RULE name="String" color="#FFE1FF">
+            <RIGHTSIDE>
+                <TOKEN name="string"/>
+                <CODE>
+                    $$ = NodeFormatter.FormatString($1);
+
+                </CODE>
+            </RIGHTSIDE>
+        </RULE>
+    </RULES>
+</VCC>

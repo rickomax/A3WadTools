@@ -1,0 +1,339 @@
+using System;
+using System.IO;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text;
+using System.Text.RegularExpressions;
+using WDL2CS;
+
+namespace VCCCompiler
+{
+    /// <summary>
+    /// Zusammenfassung für MyCompiler.
+    /// </summary>
+    class WDLCompiler
+    {
+        List<int> tList = new List<int>();
+        List<Regex> rList = new List<Regex>();
+        public WDLCompiler()
+        {
+#warning Place tList and rList init in MyCompiler(){} constructor for tokens and their regular expressions. Keeping order of generated constants is essential.
+//Example:
+//                tList.Add(t_IFDEF);
+//                rList.Add(new Regex("\\G((?i)IFDEF)"));
+//Correct order can be retrieved from generated FindToken() function
+            Regex.CacheSize += rList.Count;
+        }
+        YYARec[] yya;
+        YYARec[] yyg;
+        YYRRec[] yyr;
+        int[] yyd;
+        int[] yyal;
+        int[] yyah;
+        int[] yygl;
+        int[] yygh;
+
+        int yyn = 0;
+        int yystate = 0;
+        int yychar = -1;
+        int yynerrs = 0;
+        int yyerrflag = 0;
+        int yysp = 0;
+        int yymaxdepth = 20000;
+        int yyflag = 0;
+        int yyfnone = 0;
+        int[] yys = new int[20000];
+        //string[] yyv = new string[20000];
+        Node[] yyv = new Node[20000];
+
+        //string yyval = "";
+        Node yyval = new Node();
+
+        //StreamWriter Output;
+        string output;
+        string scriptName = "Script";
+        bool showTokens = false;
+        bool generatePropertyList = false;
+        Dictionary<string, Dictionary<string, Dictionary<string, List<List<string>>>>> propertyList;
+
+        class YYARec
+        {
+            public int sym;
+            public int act;
+            public YYARec(int s, int a) { sym = s; act = a; }
+        }
+
+        class YYRRec
+        {
+            public int len;
+            public int sym;
+            public YYRRec(int l, int s) { sym = s; len = l; }
+        }
+
+        ////////////////////////////////////////////////////////////////
+        /// Constant values / tokens
+        ////////////////////////////////////////////////////////////////
+%%
+
+        public string ScriptName { get => scriptName; set => scriptName = value; }
+        public bool ShowTokens { get => showTokens; set => showTokens = value; }
+        public bool GeneratePropertyList { get => generatePropertyList; set => generatePropertyList = value; }        
+        public Dictionary<string, Dictionary<string, Dictionary<string, List<List<string>>>>> PropertyList { get => propertyList; }
+
+        public int Parse(string inFile, out string outData)
+        {
+            outData = string.Empty;
+            string inputstream = File.ReadAllText(inFile, Encoding.ASCII);
+            string path = Path.GetDirectoryName(inFile);
+
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+            Preprocess p = new Preprocess(path);
+            inputstream = p.Parse(ref inputstream);
+
+            ////////////////////////////////////////////////////////////////
+            /// Compiler Code:
+            ////////////////////////////////////////////////////////////////
+
+            //                        if (!Scanner(inputstream)) return 1;
+            if (!ScannerOpt(inputstream)) return 1;
+            if (ShowTokens)
+            {
+                foreach (AToken t in TokenList)
+                {
+                    Console.WriteLine("TokenID: " + t.token + "  =  " + t.val);
+                }
+            }
+            InitTables();
+            if (!yyparse()) return 1;
+
+            Console.WriteLine("(I) PARSER compilation finished in " + watch.Elapsed);
+            watch.Stop();
+            outData = output;
+            return 0;
+        }
+
+        public void yyaction(int yyruleno)
+        {
+            switch (yyruleno)
+            {
+                ////////////////////////////////////////////////////////////////
+                /// YYAction code:
+                ////////////////////////////////////////////////////////////////
+%%
+%%
+               default: return;
+            }
+        }
+
+        public void InitTables()
+        {
+            ////////////////////////////////////////////////////////////////
+            /// Init Table code:
+            ////////////////////////////////////////////////////////////////
+%%
+        }
+
+        public bool yyact(int state, int sym, ref int act)
+        {
+            int k = yyal[state];
+            while (k <= yyah[state] && yya[k].sym != sym) k++;
+            if (k > yyah[state]) return false;
+            act = yya[k].act;
+            return true;
+        }
+        public bool yygoto(int state, int sym, ref int nstate)
+        {
+            int k = yygl[state];
+            while (k <= yygh[state] && yyg[k].sym != sym) k++;
+            if (k > yygh[state]) return false;
+            nstate = yyg[k].act;
+            return true;
+        }
+
+        public void yyerror(string s)
+        {
+            System.Console.Write(s);
+        }
+
+        int yylexpos = -1;
+        //string yylval = "";
+        Node yylval = new Node();
+
+        public int yylex()
+        {
+            yylexpos++;
+            if (yylexpos >= TokenList.Count)
+            {
+                //yylval = "";
+                yylval = new Node();
+                return 0;
+            }
+            else
+            {
+                //yylval = ((AToken)TokenList[yylexpos]).val;
+                yylval = new Node(((AToken)TokenList[yylexpos]).val);
+                return ((AToken)TokenList[yylexpos]).token;
+            }
+        }
+
+        public bool yyparse()
+        {
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+
+            parse:
+
+            yysp++;
+            if (yysp >= yymaxdepth)
+            {
+                yyerror("yyparse stack overflow");
+                goto abort;
+            }
+
+            yys[yysp] = yystate;
+            yyv[yysp] = yyval;
+
+            next:
+
+            if (yyd[yystate] == 0 && yychar == -1)
+            {
+                yychar = yylex();
+                if (yychar < 0) yychar = 0;
+            }
+
+            yyn = yyd[yystate];
+            if (yyn != 0) goto reduce;
+
+
+            if (! yyact(yystate, yychar, ref yyn)) goto error;
+            else if (yyn>0) goto shift;
+            else if (yyn<0) goto reduce;
+            else            goto accept;
+
+            error:
+
+            if (yyerrflag==0) yyerror("syntax error " + yylval);
+
+            errlab:
+
+            if (yyerrflag==0) yynerrs++;
+
+            if (yyerrflag<=2)
+            {
+                yyerrflag = 3;
+                while (yysp > 0 && !(yyact(yys[yysp], 255, ref yyn) && yyn > 0)) yysp--;
+
+                if (yysp == 0) goto abort;
+                yystate = yyn;
+                goto parse;
+            }
+            else
+            {
+                if (yychar == 0) goto abort;
+                yychar = -1; goto next;
+            }
+
+            shift:
+
+            yystate = yyn;
+            yychar = -1;
+            yyval = yylval;
+            if (yyerrflag > 0) yyerrflag--;
+            goto parse;
+
+            reduce:
+
+            yyflag = yyfnone;
+            yyaction(-yyn);
+            int l = yyr[-yyn].len;
+            for (int z = yysp; z > yysp - l; z--)
+                yyv[z] = null;
+
+            yysp -= l;
+            //yysp -= yyr[-yyn].len;
+
+            if (yygoto(yys[yysp], yyr[-yyn].sym, ref yyn)) yystate = yyn;
+
+            switch (yyflag)
+            {
+                case 1: goto accept;
+                case 2: goto abort;
+                case 3: goto errlab;
+            }
+
+            goto parse;
+
+            accept:
+
+            Console.WriteLine("(I) PARSER parsing finished in " + watch.Elapsed);
+            watch.Stop();
+            return true;
+
+            abort:
+
+            Console.WriteLine("(E) PARSER parsing aborted.");
+            watch.Stop();
+            return false;
+        }
+        ////////////////////////////////////////////////////////////////
+        /// Scanner - Optimized
+        ////////////////////////////////////////////////////////////////
+
+        public bool ScannerOpt(string Input)
+        {
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+
+            if (Input.Length == 0) return true;
+            TokenList = new ArrayList();
+            int pos = 0;
+            while (1 == 1)
+            {
+                AToken lasttoken = FindTokenOpt(Input, pos);
+                if (lasttoken.token == 0) break;
+                if (lasttoken.token != t_ignore) TokenList.Add(lasttoken);
+                pos += lasttoken.val.Length;
+                if (Input.Length <= pos)
+                {
+                    Console.WriteLine("(I) PARSER scanning finished in " + watch.Elapsed);
+                    return true;
+                }
+            }
+            System.Console.WriteLine(Input);
+            System.Console.WriteLine();
+            System.Console.WriteLine("No matching token found near: " + Input.Substring(pos));
+            return false;
+        }
+        public AToken FindTokenOpt(string Rest, int startpos)
+        {
+            Match m;
+            int maxlength = 0;
+            int besttoken = 0;
+            AToken ret = new AToken();
+            try
+            {
+
+                for (int idx = 0; idx < tList.Count; idx++)
+                {
+                    m = rList[idx].Match(Rest, startpos);
+                    if (m.Success)
+                    {
+                        if (m.Value.Length > maxlength)
+                        {
+                            maxlength = m.Value.Length;
+                            besttoken = tList[idx];
+                            ret.token = besttoken;
+                            if (besttoken != 0)
+                                ret.val = m.Value;
+                        }
+                    }
+                }
+
+            }
+            catch { }
+            return ret;
+        }
+    }
+}

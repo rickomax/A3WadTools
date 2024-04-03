@@ -1,0 +1,656 @@
+/////////////////////////////////////////////////////////////////
+>>>   ACKNEX spring 1998 release - new features (05-15-1998)  <<<
+/////////////////////////////////////////////////////////////////
+Updating from a previous version
+
+   Version 3.9 contains a difference to previous versions, which
+   may - depending on your WDL files - lead to an
+   undesired behaviour.
+
+   The reason is that some syntax or arithmetic errors in RULE
+   instructions were tolerated by older versions, but not by V3.9 and
+   above. So if you experience a "division by zero" abort in your game,
+   please check the indicated script carefully! By limiting the
+   dividend or divisor values, take care that the result of a division
+   never will exceed a value of +/- 2,000,000.
+
+/////////////////////////////////////////////////////////////////
+Windows 95 / DirectX support
+
+   The ACKNEX runtime module (WWRUN.EXE) now is a native windows
+   application, and supports the DirectX 5 library in either fullscreen
+   and window mode. You need either windows 98, or windows 95 with
+   DirectX 5 installed on your PC in order to run it. DirectX 5 can be
+   downloaded from the microsoft site, or installed from many game
+   magazine or driver CD-ROMs. The DOS runtime module, however, is
+   still available. The level editor WED is still a DOS application,
+   but runs under windows 95 as well.
+
+   The windows runtime module accepts the same command line options as
+   its DOS counterpart, and can be started the same way from a DOS box.
+   Please note that under windows the color #0 of your palette must be
+   black and the color #255 must be white. 320x400 resolution is not
+   supported by some older VGA cards' directx drivers. 320x200, 640x480
+   and 800x600 should work with each card. The win95 version now
+   supports 16-bit WAV files.
+
+   It will toggle between fullscreen and window mode by pressing
+   [Alt-Return]. By giving the command line option -WND it will start
+   in window mode. For execution of the windows version, the window and
+   message definition files WWRUN.WDF and WWRUN.MDF must be placed into
+   the same directory as the win95 runtime module (WWRUN.EXE or
+   WVRUN.EXE).
+
+/////////////////////////////////////////////////////////////////
+COMPILE & PUBLISH
+
+   The WED PUBLISH Feature for generation of a runtime module is now
+   available for the lite version too. It will create two EXE files:
+   WRUN.EXE for DOS, and WWRUN.EXE for Windows 95. Through the menu
+   option COMPILE & PUBLISH the professional version also will generate
+   the DOS runtime module VRUN.EXE and the win95 runtime module
+   WVRUN.EXE for the compiled resource file.
+
+   The royalty terms were simplified: All games without polygonal
+   objects and with less than 1500 objects per level are now royalty
+   free, independent of the number of levels.
+
+   Even for games where royalties are required, the resource (WRS)
+   files have not to be sent anymore to CONITEC for generation of a
+   runtime module. After compiling a WRS file WED now shows a 5-digit
+   "Magic Key". This Magic Key is sufficient for CONITEC to deliver the
+   runtime module. But don't erase the WRS file! Each compilation may
+   generate a different Magic Key even if there's nothing changed
+   within the game.
+
+   The WED options -ct and -xt perform like -c und -x; but all files
+   are compiled or copied, even such ones which are skipped in the
+   WDL file by IFDEF or IFNDEF. This way several versions of a level
+   can be put together into the same resource. The "All IFDEFs" button
+   within the compile dialogue serves the same purpose.
+
+WEX
+
+   .FLI, .WAV or .PCX files with the extension ".WEX" are looked for by
+   the runtime module first in the current directory, and then in the
+   .WRS resource file. This way animations, graphics and sounds can be
+   changed externally even if the resource file is already compiled and
+   the runtime module is already created.
+
+/////////////////////////////////////////////////////////////////
+Network and modem support (professional windows version only)
+
+   Instead using a NULL modem cable, you can now play 2-player games
+   via modem or via an IPX or TCP/IP protocol network. Start with
+   "-NODE 0" or "-NODE 1", and give the following parameters:
+
+   -COM n for connection via a serial link cable (works under DOS also)
+   -MODEM for connection using your modem (you'll be prompted for the
+  	     phone number to dial)
+   -TCP   for network connection using the TCP/IP protocol (you'll be
+          prompted for the session server address)
+   -IPX   for network connction using the IPX protocol (e.g. Novell)
+
+   After starting, the engine will check wether an ACKNEX session of
+   the given type is currently running. If yes, the session will be
+   joined; otherwise a new session will be opened.
+
+   To quickly start an IPX 2-player game, follow these steps:
+   - Define two actors, the first with TARGET NODE0, the second with
+     TARGET NODE1, and place them both into the level
+   - PUBLISH to get a windows runtime module
+   - Start WWRUN levelname -NODE 0 -IPX on the first PC, wait until the
+     session is established, then start WWRUN levelname -NODE 1 -IPX on
+	the second PC.
+
+3D Shutter glasses support (professional windows version only)
+
+   By starting WWRUN with the command line option "-3D_SIMEYE"
+   SIMULEYES shutter glasses (stereoscopic mode) are activated. Through
+   the predefined skill EYE_DIST (default=0.5) the eye distance for the
+   3-D effect can be determined. Please note that the effective frame
+   rate is reduced to 1/2, and that the directx drivers of some older
+   video cards don't support stereoscopic mode.
+
+800x600 (professional version only)
+
+   By giving "VIDEO S800x600;" a screen resolution of 800x600 pixels
+   is activated.
+
+Multiple views (commercial and professional version only)
+
+   For the creation of rear mirrors, missile cameras or the like, or
+   for multiplayer games, multiple 3D windows can be displayed. Each 3D
+   window, except the original one, can be created through the VIEW
+   definition:
+
+   VIEW viewname { ... }
+
+   Within the VIEW you have the following keywords:
+
+   POS_X  x;
+   POS_Y  y;
+      The upper left edge of the window in screen pixel coordinates.
+	 Please note that for the position the same restrictions as for
+	 the SCREEN_X, SCREEN_Y skills apply.
+
+   SIZE_X dx;
+   SIZE_Y dy;
+      The size of the window in pixels. Please note that for the size
+	 the same restrictions as for the SCREEN_WIDTH and SCREEN_HGT
+	 skills apply.
+
+   GENIUS actorname;
+      The name of the thing or actor the view is attached to.
+
+   FLAGS  VISIBLE;
+      To let the view be visible.
+
+   For a continous movement the actor should have the FAR flag set.
+
+   Example for a screen horizontally split into 2 halves:
+
+   ASPECT   0.5;              // to get the right proportions
+
+   SKILL SCREEN_X { VAL 0; }  // 1st View, upper half of screen
+   SKILL SCREEN_Y { VAL 0; }
+   SKILL SCREEN_WIDTH { VAL 640; }  // SVGA mode only!
+   SKILL SCREEN_HGT   { VAL 240; }
+
+   VIEW my_view {
+      POS_X   0;       // 2nd View, lower half
+      POS_Y   240;
+      SIZE_X  640;
+      SIZE_Y  240;
+      GENIUS  my_actor;   // You'll be looking through his eyes
+      FLAGS   VISIBLE;
+   }
+
+DITHER
+
+   By using 'dithering' the light and shadows will now run now much
+   smoother than before. If this is not desired, by giving the keyword
+   "DITHER 0;" at the beginning of the WDL file the dithering can be
+   switched off.
+
+LAYER
+
+   PANEL, OVERLAY, TEXT, and VIEW elements now all have got the VISIBLE
+   flag and the LAYER parameter. Elements with VISIBLE flag set will be
+   displayed on the screen. Their order will be determined through the
+   LAYER parameter (default=0). Elements with higher LAYER value will
+   be placed over elements with lower LAYER value. The LAYER parameters
+   cannot be changed during the game. The order of the automap can be
+   determined via the skill MAP_LAYER.
+   This way an infinite number of elements can be displayed. The
+   16-element lists PANELS, LAYERS, and MESSAGES are superflous now.
+
+/////////////////////////////////////////////////////////////////
+RULE
+
+   The RULE instruction now supports some mathematical functions:
+
+   SIN(x),COS(x),TAN(x)  -> trigonometric functions
+   ASIN(x),ACOS(x)       -> reverse trigonometric functions
+   SQRT(x)  -> square root of x
+   SIGN(x)  -> -1 if (x<0), 1 if (x>0), 0 if (x==0)
+   ABS(x)   -> absolute amout of x
+   INT(x)   -> integer value of x
+   EXP(x)   -> e power x
+   LOG(x),LOG10(x),LOG2(x) -> logarithm of x
+   RANDOM(x) -> random number between 0 and x
+
+   Example: RULE z = RANDOM(4+z)*8;
+
+   Please note that invalid operations - e.g. square root of a negative
+   number - will cause an emergency abort with error message!
+
+   Additional to the binary operators + - * /, now some new operators
+   are supported (for integer values only):
+
+   %  -> modulo (integer remainder of a division)
+   |  -> bit-wise OR
+   ^  -> bit-wise exclusive OR
+   &  -> bit-wise AND
+
+   Example: RULE z = x%10;
+
+   Instead of the previous ADD, SUB.. instructions, in RULEs now the
+   C/JAVA operators +=, -=, *=, /= can be used.
+
+   Example: RULE z += 1;  will increase the skill z by 1.
+
+IF, WHILE
+
+   The long-awaited C/JAVA-style IF and WHILE instructions for
+   conditional execution of whole sets of WDL instructions are now
+   available:
+
+   IF (rule) {...}
+   IF (rule) {...} ELSE {...}
+      will execute all instructions between the first pair of winged
+	 brackets only if the mathematical expression between the round
+	 brackets evaluates to non-zero. Otherwise, the instructions
+	 between the 2nd pair of winged brackets (after ELSE) will be
+	 executed. ELSE and the 2nd set of instructions can be omitted.
+
+   WHILE (rule) {...}
+      will repeat all instructions between the first pair of winged
+	 brackets as long as the mathematical expression between the round
+	 brackets evaluates to non-zero. The expression will be evaluated
+	 at the begin of each repetition. The instruction BREAK; between
+	 the winged brackets will end the repetitions and continue with
+	 the first instruction after the closed bracked. The instruction
+	 CONTINUE; will begin at one with the next repetition.
+
+   You can 'nest' IF or WHILE instructions. For the expression (rule)
+   the following operators for comparision between two sub-expressions
+   are available:
+
+   ||   true (non-zero) if either is non-zero (OR)
+   &&   true if both are non-zero (AND)
+   !=   true if both are not equal
+   ==   true of both are equal
+   <=   true if the 1st is below or equal the 2nd
+   >=   true if the 1st is above or equal the 2nd
+   <    true if the 1st is below the 2nd
+   >    true if the 1st is above the 2nd
+
+   You can compare not only numerical values, but flags and textures
+   also; these only with the == or != operators. All comparisions
+   evaluate to a value of 0 for false, and 1 for true. Examples:
+
+   old (don't use this anymore!):
+     IF_BELOW x,0; // if x is below 0, then set y and z to -1
+       GOTO l1;
+     RULE y=1;     // otherwise, set y and z to 1
+     RULE z=1;
+     GOTO l2;
+   l1:
+     RULE y=-1;
+     RULE z=-1;
+   l2:
+
+   new (this is the right method now):
+   IF (x<0) {   // if x is below 0, then set y and z to -1
+     RULE y=-1;
+     RULE z=-1;
+   } ELSE {
+     RULE y=1;  // otherwise, set y and z to 1
+     RULE z=1;
+   }
+
+   IF (((x+3)<9) || (y>0)) {
+   // do this if x+3 is below 9, or if y is above 0
+     RULE z=10;
+     BEEP;
+   } ELSE {
+   // do this in all other cases
+     RULE z=5;
+     BEEP;
+   }
+   WHILE (z>0) {
+   // repeat this als long as z is above 0
+     RULE x=x-y;
+     IF (x==0) {
+       BREAK;   // abort this loop if x is 0
+     }
+     RULE z=z-1;
+     WAIT 1;
+   }
+
+
+NEXT_MY, NEXT_THERE, NEXT_MY_THERE
+
+   The NEXT_MY instruction will place the MY synonym onto the next
+   object with the same name. NEXT_THERE will place the THERE synonym
+   onto the next region with the same name. NEXT_MY_THERE will
+   place the MY synonym onto the next object in the same region.
+
+EXCLUSIVE
+
+   The EXCLUSIVE instruction will terminate alle other actions
+   previously triggered by the same wall, thing, actor, or region. It
+   can be used to prevent several actions of the same actor running
+   simultaneously.
+
+/////////////////////////////////////////////////////////////////
+3-D Weapons
+
+   With the new TARGET HOLD the MDL actor concerned will appear in
+   front of the PLAYER. You can use this target to define 3D weapons or
+   tools. The direction of the actor is defined by its ANGLE (radians),
+   his position relative to the player by his HEIGHT, TARGET_X and
+   TARGET_Y parameters (steps). Example:
+
+   MODEL sword_mod,<sword.mdl>;
+   TEXTURE sword_tex {
+   	SCALE_X  32;
+   	SCALE_Y  32;
+   	MODEL    sword_mod;
+   }
+   ACTOR sword_arm {
+     TEXTURE    sword_tex;
+     TARGET   HOLD;
+     ANGLE     3.14;
+     TARGET_X  1;
+     TARGET_Y  2;
+     HEIGHT   -1;
+   }
+
+   Please note that this order of the parameters must be kept, that
+   the actor is shown in all VIEWs, and that there is only one HOLD
+   actor allowed. You can define several HOLD actors, but the unused
+   have to be INVISIBLE.
+
+Bullet holes
+
+   The skills HIT_X and HIT_Y are now also valid for hitting wall
+   textures, and may be used to attach bullet holes to walls. Example
+   (only one hole!):
+
+   BMAP    hole_map,<hole.pcx>;
+   TEXTURE hole_tex { BMAP hole_map; }
+   SYNONYM last_hitobj { TYPE WALL; }
+
+   ACTION set_hole {
+     SHOOT;
+     IF (HIT == NULL) {          // nothing hit?
+       END; }
+     IF (last_hitobj != NULL) {   // something hit before?
+       SET  last_hitobj.ATTACH,NULL; } // remove hole from last wall
+     SET  HIT.ATTACH,hole_tex;  // and place it onto new
+     SET  last_hitobj,HIT;
+     SET  hole_tex.POS_X,HIT_X;
+     SET  hole_tex.POS_Y,HIT_Y;
+   }
+
+   To place more holes is possible, but non-trivial. The HOLE.WDL
+   within the SKAPH directory contains the WDL code to place bullet
+   holes for the last 100 hits.
+
+LEFT, RIGHT
+
+   The left and right region of a wall can now be evaluated or
+   assigned to a synonym using the wall parameters LEFT and RIGHT.
+
+TOP, BELOW
+
+   The region parameters BELOW and TOP (the uppermost region) may
+   now be evaluated (but not changed!) in actions.
+
+THING, ACTOR
+
+   Using the object flags THING and ACTOR you can check wether the
+   synonym concerned (e.g. HIT) is a THING or an ACTOR.
+
+IMPASSABLE
+
+   Things and actors, too, may now be given the IMPASSABLE flag.
+
+MASTER
+
+   If an actor has the flags MASTER and CAREFULLY set he will - as if
+   he was the player - trigger IF_LEAVE, IF_ENTER and IF_NEAR events.
+   Please note that IF_NEAR with a DIST>0 won't work, he has to touch
+   or pass the wall or object in order to trigger the event.
+
+FAR
+
+   If an actor has the FAR flag set he'll now move continously
+   regardless of SKIP_FRAMES.
+
+WAY
+
+   If an Actor's SPEED is negative, he will follow his WAY in reverse
+   direction. A spontaneous return can by caused by the following
+   instructions:
+
+   RULE MY.SPEED *= -1;
+   IF (MY.SPEED>0)
+   { RULE MY.WAYPOINT += 1; }
+   ELSE
+   { RULE MY.WAYPOINT -= 1; }
+
+
+LIGHTMAP
+
+   The ATTACH texture flag LIGHTMAP maps light and shadows onto a wall
+   texture. The LIGHTMAP bitmap must contain only the colors #0..#15
+   and #241..#255 (otherwise: engine crash!!). Color #0 does nothing,
+   colors #1..#15 darken the wall texture, colors #255..#241 brighten
+   it (#241 = brightest). The darkest color corresponds to the level
+   palette color #1, the brightest color to the palette color #2, which
+   should be a white or yellow. Example:
+
+   BMAP torchlight_map,<torchlight.pcx>;
+   TEXTURE torchlight_tex {
+      SCALE_XY   16,16;
+      BMAPS    torchlight_map;
+      FLAGS      LIGHTMAP;
+      POS_X      40;
+      POS_Y      10;
+   }
+   WALL stone_wall {
+      TEXTURE  stone_tex;
+      ATTACH   torchlight_tex;
+   }
+
+/////////////////////////////////////////////////////////////////
+SET_INFO
+
+   The instruction "SET_INFO string,object;" is the built-in
+   debugger: It writes all parameters of the given object into the
+   string for debugging purposes. The string should have at least 1000
+   characters for this purpose. This instruction is only available in
+   WED, not in the runtime module. Example for a debugging WDL which
+   freezes the game by pressing the right mouse button, let a mouse
+   cursor appear, then show all informations about any object clicked
+   on with the left mouse button:
+
+   //////////////////////////////////////////////////////////
+   // At first the code to switch on and move the mouse:
+   OVLY	  mouse_ovr,<arrow.pcx>;
+   OVERLAY  mouse_sprite { OVLYS mouse_ovr; }
+   MSPRITE  mouse_sprite;
+
+   ACTION mouse_toggle { 	// switches the mouse on and off
+   	RULE MOUSE_MODE += 2;
+   	IF (MOUSE_MODE > 2) {	// was it alread on?
+   	  RULE MOUSE_MODE=0;
+   	  END;
+   	}
+   	WHILE (MOUSE_MODE > 0) {
+   	  WAIT 1;               // now move it over the screen
+   	  RULE MOUSE_X += 2*MICKEY_X;
+   	  RULE MOUSE_Y += 2*MICKEY_Y;
+   	}
+   };
+   //////////////////////////////////////////////////////////
+   // Now the WDL code for showing the debugging info:
+   STRING	info_strg,"
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   ..............................................................
+   "; // just a very long string
+
+   TEXT	info_txt {
+     POS_X   4;
+     POS_Y   4;
+     FONT	   debug_font;
+     STRING  info_strg;
+   }
+
+   SYNONYM check_obj { TYPE ACTOR; }
+   SKILL running { VAL 0; }
+
+   ACTION scan_obj {	// permanently update the object info
+     IF (running != 0) {
+        END;
+     }				// do nothing if action is already running
+     RULE	running=1;	// (remember, this is multitasking!)
+     WHILE (running) {
+       SET_INFO  info_strg,check_obj;
+       WAIT	  1;
+     }
+   }
+   ACTION obj_click {
+     BEEP;
+     SET	check_obj,TOUCHED;
+     SET	info_txt.VISIBLE,1;
+     CALL scan_obj;
+   }
+   ACTION freeze_unfreeze {
+     IF (MOUSE_MODE == 0) {  // if the mouse is about to appear
+        SET  MOVE_MODE,0.5;  // freeze anything
+     } ELSE {
+        SET  MOVE_MODE,1;
+     }
+     CALL	mouse_toggle;
+   }
+   IF_RIGHT  freeze_unfreeze;
+   IF_KLICK  obj_click;
+
+
+PRINT
+
+   With the following instructions, the values of skills and strings
+   can be printed into a text file:
+
+   PRINTFILE   "name",number/skill;
+      Gives the name of the text file, which is composed (like with
+	 SAVE) from the given string (max. 5 characters) plus a 3-digits
+	 number plus extension .TXT. The default name is "PRINT0.TXT".
+
+   PRINT_VALUE  skill;
+   PRINT_STRING string;
+      Writes the given skill (3 decimals) or string into the text file.
+	 The original content of the file is not written over, the new
+	 data is appended at the end. The characters "\n" within a string
+	 create a line-feed within the file.
+
+
+INKEY, STR_LEN
+
+   The INKEY instruction will now cut off empty spaces from the end of
+   the string entered. The string length can be evaluated after INKEY
+   by the predefined skill STR_LEN.
+
+ADD_STRING
+
+   Like SET_STRING, but the 2nd string will be concatenated to the
+   first. Please note that the original length of the first string may
+   not be exceeded!
+
+SET_SKILL
+
+   With the instruction "SET_SKILL skill,string;" the value of the
+   skill is set to the numeric representation of the string.
+
+TO_STRING
+
+   The instruction "TO_STRING string,skill;" will copy the digit
+   representation of the given skill into the given string. Please note
+   that the original length of the first string may not be exceeded!
+
+FIND
+
+   The instruction "FIND text,string;" sets the OFFSET_Y and INDEX
+   parameters of the given TEXT to its STRING whose first characters
+   match the content of the given string. The Skill RESULT is also
+   put on the relevant INDEX. If no correspondence is found, RESULT
+   will be set to -1, and OFFSET_Y and INDEX remain unchanged. After
+   the FIND instruction the skills LINES and SIZE_Y contain the
+   number of character and pixel lines of the TEXT.
+
+/////////////////////////////////////////////////////////////////
+TOUCH_TEXT
+
+   By assigning a TEXT to the predefined synonym TOUCH_TEXT all TOUCH
+   texts will appear with the font and flags of the TEXT concerned. If
+   the VISIBLE flag of the TEXT is set, the TOUCH texts will appear at
+   its POS_X/POS_Y instead of at the mouse position.
+
+TOUCHED,TOUCH_TEX,TOUCH_REG
+
+   The TOUCHED synonym contains the object recently touched with the
+   mouse, TOUCH_TEX the recently touched texture and TOUCH_REG the
+   recently touched region. These synonyms can be used e.g. within
+   IF_KLICK actions.
+
+CDAUDIO_VOL
+
+   Through this skill you can control the volume of the playing CD
+   audio track in the range between 0 and 1. Please note that this
+   works only under plain DOS. Under Windows 95 the CD audio volume is
+   controlled by the mixer icon provided with your sound card.
+
+MAP_CENTERX, MAP_CENTERY
+
+   The skills MAP_CENTERX and MAP_CENTERY shift the automap like
+   MAP_OFFSX and MAP_OFFSY, however not in pixels but in steps. This
+   has the advantage that independently from the scale of the map
+   (MAP_SCALE) the center remains always at the same position.
+
+LOAD_MODE
+
+   If the skill LOAD_MODE is set to 1 the screen resolution is not
+   changed by a LOAD or LEVEL instruction.
+
+/////////////////////////////////////////////////////////////////
+Keys
+
+   The following keys are additionally implemented and can be accessed
+   via IF_(key) resp. KEY_(key): EQUALS, PERIOD, COMMA, BRACKL, BRACKR,
+   SEMIC, BKSL, SLASH.
+
+UNDEF
+
+   A keyword defined by DEFINE can be undefined by UNDEF.
+
+COMMAND_LINE
+
+   By using the string synonym COMMAND_LINE a single DEFINE parameter
+   can be passed to a new level started by the LEVEL instruction. By
+   giving the option -u instead of -d the parameter will be undefined
+   if it was defined before. Please note that the original command line
+   definitions (-d option) are global, i.e. will remain valid within
+   all levels started by the original level (except if the definitions
+   are removed with UNDEF at the end of the WDL code). Example:
+
+   STRING svga_str,"-d SVGA";
+   STRING no_svga_str,"-u SVGA";
+
+   ACTION start_level_with_svga {
+      SET   COMMAND_LINE,svga_str;
+      LEVEL   <newlevel.wdl>;
+   }
+   ACTION start_level_without_svga {
+      SET   COMMAND_LINE,no_svga_str;
+      LEVEL   <newlevel.wdl>;
+   }
+
+PALANIM_DELAY
+
+   You can now automatically switch palettes during gameplay and during
+   level loading, in order to display a palette animation. The skill
+   PALANIM_DELAY (default=0=disabled) gives the time in ticks between
+   switching the palettes. The switching will continue during LEVEL
+   instructions, thus continuing the animation, while all other actions
+   are stopped. The order of the palette cycle is given by the new
+   PALETTE parameter CYCLE. The palettes change from lower to higher
+   CYCLEs. If a palette CYCLE is 0 (default), the palette will not be
+   included in the palette animation.
+
+/////////////////////////////////////////////////////////////////

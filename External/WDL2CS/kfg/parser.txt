@@ -1,0 +1,115 @@
+Start -> Sections
+
+%Ugly Patch: Collect any garbage keyword at EOF - WDL allowed it
+%Sections -> Section Sections | EPSILON
+Sections -> Section Sections | Keyword | EPSILON
+Section -> ObjectDef | FunctionDef | AssetDef | GlobalDef | } | { | ;
+%Superfluous closing curly braces and semicolons may be put - capture these as dummy section
+
+GlobalDef -> Global GlobalParameter ; | Global ObjectIdList ;
+Global -> ReducedKeyword
+ObjectIdList -> ObjectId ObjectIdList | EPSILON
+%Identifier clashes with ObjectId of ObjectIdList
+GlobalParameter -> Number | File | String 
+
+AssetDef -> AssetRef AssetId File AssetParams ;
+AssetParams -> AssetParam AssetParams | EPSILON 
+AssetParam -> Integer
+AssetRef -> asset
+
+ObjectDef -> Object ObjectId ; | Object ObjectId { PropertyDefs } | Object ObjectId String ;
+ObjectRef -> object
+%TODO is this special case still required?
+Object -> ObjectRef | ambig_object_flag 
+PropertyDefs -> PropertyDef PropertyDefs | EPSILON
+PropertyDef -> BasicKeyword PropertyValueList ; | ;
+PropertyValueList -> PropertyValue PropertyValueList | PropertyValue 
+PropertyValue -> Number | File | String | KeywordPar
+
+FunctionDef -> Function FunctionId { Instructions }
+Function -> function
+%Compatibility patch - Goto markers may also be terminated by ; instead of : (use identifier instead of GotoMarker for patch; causes reduce/reduce conflicts otherwise)
+Instructions -> Instruction Instructions | GotoMarker : Instructions | Flow Instructions | { Instructions } Instructions | EPSILON
+Instruction -> Command ; | Command ParameterList ; | Rule ; | ;
+
+ParameterList -> Parameter ParameterList | Parameter
+Parameter -> Number | File | String | KeywordPar | List
+
+Expression -> LogicOr
+LogicOr -> LogicOr '||' LogicAnd | LogicAnd
+LogicAnd -> LogicAnd && BitOr | BitOr
+BitOr -> BitOr '|' BitXor | BitXor
+BitXor -> BitXor ^ BitAnd | BitAnd
+BitAnd -> BitAnd & Equality | Equality
+Equality -> Equality OpEq Comparison | Comparison
+Comparison -> Comparison OpCmp Term | Term
+Term -> Term OpTerm Factor | Factor 
+Factor -> Factor OpFac Unary | Unary 
+Unary -> OpUn Unary | Primary
+%add stupid "SKILL 6 --> 6" and "18,4 --> 18" workarounds
+%Primary -> UnNumber | Keyword | ( Expression ) | Math ( Expression ) | List
+Primary -> UnNumber | Keyword | ( Expression ) | Math ( Expression ) | List | Keyword integer | integer integer
+
+OpEq -> == | !=
+OpCmp -> <= | >= | < | > 
+OpTerm -> + | -
+OpFac -> / | * | %
+OpUn -> - | + | !
+
+%WDL parser allows RULEs without assignment and statements similar to SET a,b;
+%Rule -> RULE Keyword OpAssign Expression | Keyword OpAssign Expression
+Rule -> RULE Keyword OpAssign Expression | RULE Expression | Keyword OpAssign Expression
+OpAssign -> = | += | -= | *= | /=
+Math -> math | ambig_math_command | ambig_math_skill_property
+
+%Compatibility patch - WDL parser accepts isolated ELSE ... Needs to be taken care of by code generator
+%Flow -> IF Expression { Instructions } | IF Expression { Instructions } ELSE { Instructions } | WHILE Expression { Instructions }
+Flow -> IF Expression { Instructions } | ELSE { Instructions } | WHILE Expression { Instructions }
+
+Keyword -> BasicKeyword | BasicKeyword . BasicKeyword
+KeywordPar -> OpUn Keyword | Keyword
+Command -> BasicKeyword | ELSE
+Number -> Integer | Fixed
+UnNumber -> integer | fixed
+Integer -> OpUn integer | integer
+Fixed -> OpUn fixed | fixed
+Identifier -> identifier
+List -> list %TODO: move out of grammar
+
+ambig_command_property
+EngineKeywords -> asset | object | function | math | ambig_object_flag | ambig_math_command | ambig_math_skill_property
+BasicKeyword -> EngineKeywords | Identifier | NULL
+ReducedKeyword -> math | ambig_math_command | Identifier
+%add stupid "identifier-name" / "identifier-123" workarounds
+HackKeyword -> BasicKeyword | identifier - identifier | identifier - integer
+%ObjectId -> BasicKeyword
+ObjectId -> HackKeyword
+%FunctionId -> BasicKeyword
+FunctionId -> HackKeyword
+%Note: Asset identifiers may start with numbers in WDL. Needs to be captured with regex and taken care of by code generator
+%AssetId -> BasicKeyword | integer
+AssetId -> HackKeyword | integer
+GotoMarker -> BasicKeyword
+
+%Complex Regex terminals must be added at end of token list
+File -> file
+String -> string
+
+%Ambiguous keyword lists - used in case some keywords are used multiple times in different contexts
+%- ambig_event_property (moved out of grammar)
+%- ambig_skill_property (moved out of grammar)
+%- ambig_global_property (moved out of grammar)
+%- ambig_global_synonym_property (moved out of grammar)
+%- ambig_synonym_flag (moved out of grammar)
+%- ambig_object_flag
+%- ambig_math_command
+%- ambig_math_skill_property
+%- ambig_command_property (moved out of grammar)
+%- ambig_skill_flag (moved out of grammar)
+
+%Regex patches - Odd behavior captured with regex and needs to be taken care of by code generator
+%- Combined assign operators += etc. may have spaces inbetween. 
+%- Comma separator may be put multiple times and at end of instruction right before ;. 
+%- File name may have leading and traling spaces e.g. <file.wdl >. TODO: cleaner filename detection
+%- skills may be defined like global definitions
+%- SET instruction allows := instead of , as assignment operator
