@@ -119,7 +119,7 @@ namespace WAD2WMP
                                     wmpStreamWriter.Write(WMPVertexHeaderTemplate);
                                     foreach (var vertex in allVertices)
                                     {
-                                        wmpStreamWriter.Write(WMPVertexTemplate, vertex.X * Scale, -vertex.Y * Scale, vertexIndex++);
+                                        wmpStreamWriter.Write(WMPVertexTemplate, vertex.X * Scale, vertex.Y * Scale, vertexIndex++);
                                     }
 
                                     var sectorIndex = 0;
@@ -143,7 +143,7 @@ namespace WAD2WMP
                                         var vIndex2 = linedef.EndVertexIndex;
                                         var rightSideSectorIndex = rightSide.SectorIndex + 1;
                                         var leftSideSectorIndex = leftSide == null ? 0 : leftSide.SectorIndex + 1;
-                                        wmpStreamWriter.Write(WMPWallTemplate, wallName, vIndex2, vIndex1, leftSideSectorIndex, rightSideSectorIndex, rightSide.XOffset, rightSide.YOffset, wallIndex++);
+                                        wmpStreamWriter.Write(WMPWallTemplate, wallName, vIndex1, vIndex2, leftSideSectorIndex, rightSideSectorIndex, rightSide.XOffset, rightSide.YOffset, wallIndex++);
                                         wdlStreamWriter.Write(WDLWallTemplate, wallName, forceDummyTextures ? DummyTextureName : rightSide.MiddleTexture); //todo: select best texture
                                     }
 
@@ -153,7 +153,7 @@ namespace WAD2WMP
                                     {
                                         if (thing.Type == 1)
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", thing.X * Scale, -thing.Y * Scale, thing.Angle, FindRegion(thing), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", thing.X * Scale, thing.Y * Scale, thing.Angle, FindRegion(thing), thingIndex++);
                                         }
                                     }
 
