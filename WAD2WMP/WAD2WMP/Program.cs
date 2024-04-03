@@ -18,10 +18,10 @@ namespace WAD2WMP
         private const string WMPRegionHeaderTemplate = "\r\n\r\n\r\n\r\n#region\tname\tfloor_hgt\tceil_hgt\r\n#---------------------------------\r\n";
         private const string WMPWallsHeaderTemplate =  "\r\n\r\n\r\n\r\n#wall\tname vertex vertex\tregion region\toffsx offsy\tindex\r\n#------------------------------------------------------------\r\n";
         private const string WMPThingsHeaderTemplate = "\r\n\r\n\r\n\r\n#player_start\r\n#thing\r\n#actor name xpos ypos angle region index\r\n#---------------------------------------\r\n";
-        private const string WMPVertexTemplate = "VERTEX\t{0} {1} 0;#{2}\r\n";
-        private const string WMPWallTemplate = "WALL\t{0} {1} {2} {3} {4};#{5}\r\n";
-        private const string WMPRegionTemplate = "REGION\t{0} {1} {2};#{3}\r\n";
-        private const string WMPThingTemplate = "{0}\t{1} {2} {3} {4};#{5}\r\n";
+        private const string WMPVertexTemplate = "VERTEX\t{0}\t{1}\t0;#{2}\r\n";
+        private const string WMPWallTemplate = "WALL\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6};#{7}\r\n";
+        private const string WMPRegionTemplate = "REGION\t{0}\t{1}\t{2};#{3}\r\n";
+        private const string WMPThingTemplate = "{0}\t{1}\t{2}\t{3}\t{4};#{5}\r\n";
 
         private const string WDLHeaderTemplate = "MAP {0};\r\n";
         private const string WDLRegionTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n}}\r\n";
@@ -125,10 +125,10 @@ namespace WAD2WMP
                                         var wallName = $"WALL{wallIndex}";
                                         var rightSide = linedef.RightSide;
                                         var leftSide = linedef.LeftSide;
-                                        var vIndex1 = Array.IndexOf(allVertices, linedef.Start);
-                                        var vIndex2 = Array.IndexOf(allVertices, linedef.End);
-                                        var rightSideIndex = rightSide == null ? 0 : Array.IndexOf(allSectors, rightSide.Sector) + 1;
-                                        var leftSideIndex = leftSide == null ? 0 : Array.IndexOf(allSectors, leftSide.Sector) + 1;
+                                        var vIndex1 = linedef.StartVertexIndex;
+                                        var vIndex2 = linedef.EndVertexIndex;
+                                        var rightSideIndex = rightSide.SectorIndex + 1;
+                                        var leftSideIndex = leftSide == null ? 0 : leftSide.SectorIndex + 1;
                                         wmpStreamWriter.Write(WMPWallTemplate, wallName, vIndex1, vIndex2, rightSideIndex, leftSideIndex, rightSide.XOffset, rightSide.YOffset, wallIndex++);
                                     }
 
