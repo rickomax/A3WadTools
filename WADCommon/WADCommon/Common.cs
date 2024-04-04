@@ -5,7 +5,8 @@ namespace WADCommon
     public static class Common
     {
 
-        public const float Scale = 1f / 16f;
+        public const float AckScale = 16f;
+        public const float Scale = 1f / AckScale;
 
         public static bool IsValidPath(string path)
         {
