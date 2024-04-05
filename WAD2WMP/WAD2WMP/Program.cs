@@ -31,7 +31,7 @@ namespace WAD2WMP
         private const string WDLRegionTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n\tAMBIENT {3};\r\n}}\r\n";
         private const string WDLTextureTemplate = "TEXTURE {0} {{\r\n\tSCALE_XY {2}, {3};\r\n\tBMAPS {1};\r\n}}\r\n";
         private const string WDLBitmapTemplate = "BMAP {0} <{1}>;\r\n";
-        private const string WDLWallTemplate = "WALL {0} {{\r\n\tTEXTURE {1};\r\n}}\r\n";
+        private const string WDLWallTemplate = "WALL {0} {{\r\n\tTEXTURE {1};\r\n\tFLAGS PORTCULLIS;\r\n}}\r\n";
         private const string WDLPaletteTemplate = "PALETTE MAINPAL{{\r\n\tPALFILE <{0}>;\r\n\tRANGE 2, 254;\r\n\tFLAGS AUTORANGE;\r\n}}\r\n";
 
         private const string DefaultPaletteFilename = "PALETTE.PCX";
@@ -49,9 +49,9 @@ namespace WAD2WMP
         static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-            if (args.Length < 3)
+            if (args.Length < 4)
             {
-                Console.WriteLine("WAD2WMP - Usage: <Input WAD Path> <Output WMP Path> <Output WDL Path> <Optional: Force Dummy Textures Y/N>");
+                Console.WriteLine("WAD2WMP - Usage: <Input WAD Path> <Output WMP Path> <Output WDL Path> <Add WDL Header: Y/N> <Optional: Force Dummy Textures Y/N>");
                 Console.ReadKey();
                 return;
             }
@@ -76,7 +76,8 @@ namespace WAD2WMP
                 Console.ReadKey();
                 return;
             }
-            var forceDummyTextures = args.Length >= 4 && args[3] == "Y" || args[3] == "y";
+            var addWdlHeader = args[3] == "Y" || args[3] == "y";
+            var forceDummyTextures = args.Length >= 5 && args[4] == "Y" || args[4] == "y";
             var wmpFilename = Path.GetFileNameWithoutExtension(wmpPath);
             var wdlFilename = Path.GetFileNameWithoutExtension(wdlPath);
             var wdlDirectory = Path.GetDirectoryName(wdlPath);
@@ -92,7 +93,11 @@ namespace WAD2WMP
                             {
                                 foreach (var wadFile in WADFileFactory.FromStream(wadStream))
                                 {
-                                    wdlStreamWriter.Write(WDLHeaderTemplate, wmpFilename, wdlFilename);
+                                    if (addWdlHeader)
+                                    {
+                                        wdlStreamWriter.Write(WDLHeaderTemplate, wmpFilename, wdlFilename);
+                                    }
+
                                     wdlStreamWriter.Write(WDLBitmapTemplate, DummyBitmapName, DummyBitmapFilename);
                                     wdlStreamWriter.Write(WDLTextureTemplate, DummyTextureName, DummyBitmapName, Common.AckScale, Common.AckScale);
 
@@ -121,7 +126,6 @@ namespace WAD2WMP
                                     }
                                     else
                                     {
-
                                         wdlStreamWriter.Write(WDLPaletteTemplate, DefaultPaletteFilename);
                                     }
 
@@ -181,13 +185,13 @@ namespace WAD2WMP
                                                     Console.WriteLine($"Skipping image {lump.Name} because a palette has not been found");
                                                     continue;
                                                 }
-                                                width = 64;
-                                                height = 64;
                                                 if (textureData.Length != 4096)
                                                 {
                                                     Console.WriteLine($"Skipping image {lump.Name} because it isn't a 64x64 flat");
                                                     continue;
                                                 }
+                                                width = 64;
+                                                height = 64;
                                                 pixelData = textureData;
                                             }
                                             else if (insidePatches || insideTextures)
@@ -297,8 +301,8 @@ namespace WAD2WMP
                                         var vIndex2 = linedef.EndVertexIndex;
                                         var rightSideSectorIndex = rightSide.SectorIndex + 1;
                                         var leftSideSectorIndex = leftSide == null ? 0 : leftSide.SectorIndex + 1;
-                                        wmpStreamWriter.Write(WMPWallTemplate, wallName, vIndex1, vIndex2, leftSideSectorIndex, rightSideSectorIndex, rightSide.XOffset, rightSide.YOffset, wallIndex++);
-                                        wdlStreamWriter.Write(WDLWallTemplate, wallName, forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, usedTextures, dummyTextures, rightSide.MiddleTexture)); //todo: select best texture
+                                        wmpStreamWriter.Write(WMPWallTemplate, wallName, vIndex1, vIndex2, leftSideSectorIndex, rightSideSectorIndex, rightSide.XOffset * Common.Scale, rightSide.YOffset != 0 ? (rightSide.YOffset - 5f) * Common.Scale : 0f, wallIndex++);
+                                        wdlStreamWriter.Write(WDLWallTemplate, wallName, forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, usedTextures, dummyTextures, SelectTexture(rightSide.LowerTexture, rightSide.UpperTexture, rightSide.MiddleTexture)));
                                     }
 
                                     var thingIndex = 0;
@@ -362,6 +366,20 @@ namespace WAD2WMP
                 wdlStreamWriter.Write(WDLBitmapTemplate, bitmapName, textureFilename);
                 wdlStreamWriter.Write(WDLTextureTemplate, wallTextureName, bitmapName, -Common.AckScale, Common.AckScale);
                 wdlStreamWriter.Write(WDLTextureTemplate, regionTextureName, bitmapName, -Common.AckScale, -Common.AckScale);
+            }
+
+
+            string SelectTexture(string a, string b, string c)
+            {
+                if (a != "-")
+                {
+                    return a;
+                }
+                if (b != "-")
+                {
+                    return b;
+                }
+                return c;
             }
         }
 
