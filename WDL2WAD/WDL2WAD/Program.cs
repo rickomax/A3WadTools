@@ -58,6 +58,7 @@ namespace WDL2WAD
             var result = compiler.Parse(wdlPath, out var code);
             if (result == 0)
             {
+                var thingsTextures = new HashSet<string>();
 
                 var actorID = 0;
                 var ackTableContents = new StreamWriter(new MemoryStream(), Encoding.ASCII);
@@ -65,12 +66,12 @@ namespace WDL2WAD
 
                 foreach (var thing in compiler.PropertyList["Thing"])
                 {
-                    AddToDecorate(thing, decorateContents, ackTableContents, ref actorID);
+                    AddToDecorate(thing, decorateContents, ackTableContents, ref actorID, thingsTextures);
                 }
 
                 foreach (var actor in compiler.PropertyList["Actor"])
                 {
-                    AddToDecorate(actor, decorateContents, ackTableContents, ref actorID);
+                    AddToDecorate(actor, decorateContents, ackTableContents, ref actorID, thingsTextures);
                 }
 
                 var wad = new WADFileBuilder(true);
@@ -89,6 +90,7 @@ namespace WDL2WAD
                 wad.Add(ackTableLump);
 
                 var mainPalette = new List<byte>();
+
 
                 foreach (var palette in compiler.PropertyList["Palette"])
                 {
@@ -126,11 +128,35 @@ namespace WDL2WAD
                 txStartLump.Name = "TX_START";
                 wad.Add(txStartLump);
 
-
                 foreach (var texture in compiler.PropertyList["Texture"])
                 {
                     if (texture.Value.TryGetValue("Bmaps", out var textureBmaps) && compiler.PropertyList.TryGetValue("Bmap", out var bmaps))
                     {
+                        var scaleXValue = 16f;
+                        var scaleYValue = 16f;
+                        if (texture.Value.TryGetValue("Scale_xy", out var scaleXY))
+                        {
+                            scaleXValue = float.Parse(scaleXY.First()[0]);
+                            scaleYValue = float.Parse(scaleXY.First()[1]);
+                        }
+                        if (texture.Value.TryGetValue("Scale_x", out var scaleX))
+                        {
+                            scaleXValue = float.Parse(scaleX.First()[0]);
+                        }
+                        if (texture.Value.TryGetValue("Scale_y", out var scaleY))
+                        {
+                            scaleYValue = float.Parse(scaleY.First()[0]);
+                        }
+                        if (scaleXValue == 1f)
+                        {
+                            scaleXValue = 16f;
+                        }
+                        if (scaleYValue == 1f)
+                        {
+                            scaleYValue = 16f;
+                        }
+                        scaleXValue = 16f / scaleXValue;
+                        scaleYValue = 16f / scaleYValue;
                         if (bmaps.TryGetValue(textureBmaps.First().First(), out var bmap))
                         {
                             var x = 0;
@@ -165,13 +191,27 @@ namespace WDL2WAD
                                     {
                                         data = loader.Master;
                                     }
+                                    var pixelData = data.Data;
+                                    var newWidth = (int)Math.Max(1, data.Width * scaleXValue);
+                                    var newHeight = (int)Math.Max(1, data.Height * scaleYValue);
+                                    if (newWidth != data.Width || newHeight != data.Height)
+                                    {
+                                        pixelData = Common.ScaleImage(pixelData, data.Width, data.Height, newWidth, newHeight);
+                                    }
                                     var memoryStream = new MemoryStream();
                                     var binaryWriter = new BinaryWriter(memoryStream);
-                                    PCXWriter.WritePCX(data.Data, data.Width, data.Height, ExtractPalette(loader), binaryWriter);
+                                    PCXWriter.WritePCX(pixelData, newWidth, newHeight, ExtractPalette(loader), binaryWriter);
                                     binaryWriter.Flush();
                                     var pcxData = Common.ReadFully(memoryStream); //why?
                                     var bitmapLump = new Lump(new MemoryStream(pcxData));
-                                    bitmapLump.Name = $"{(texture.Key.Length > 6 ? texture.Key.Substring(0, 6) : texture.Key)}A1";
+                                    if (thingsTextures.Contains(texture.Key))
+                                    {
+                                        bitmapLump.Name = $"{(texture.Key.Length > 6 ? texture.Key.Substring(0, 6) : texture.Key)}A1";
+                                    }
+                                    else
+                                    {
+                                        bitmapLump.Name = texture.Key.Length > 8 ? texture.Key.Substring(0, 8) : texture.Key;
+                                    }
                                     wad.Add(bitmapLump);
                                 }
                             }
@@ -192,7 +232,7 @@ namespace WDL2WAD
                 }
             }
 
-            void AddToDecorate(KeyValuePair<string, Dictionary<string, List<List<string>>>> thing, StreamWriter decorateStringBuilder, StreamWriter ackTableStringBuilder, ref int actorID)
+            void AddToDecorate(KeyValuePair<string, Dictionary<string, List<List<string>>>> thing, StreamWriter decorateStringBuilder, StreamWriter ackTableStringBuilder, ref int actorID, HashSet<string> thingsTextures)
             {
                 if (thing.Value.TryGetValue("Texture", out var thingTexture) && compiler.PropertyList.TryGetValue("Texture", out var textures))
                 {
@@ -205,6 +245,7 @@ namespace WDL2WAD
                             {
                                 if (bmap.TryGetValue("File", out var bmapFile))
                                 {
+                                    thingsTextures.Add(thingTextureName);
                                     var finalID = BaseActorID + actorID++;
                                     ackTableStringBuilder.WriteLine(finalID + "," + thing.Key);
                                     var textureName = thingTextureName.Length > 6 ? thingTextureName.Substring(0, 6) : thingTextureName;

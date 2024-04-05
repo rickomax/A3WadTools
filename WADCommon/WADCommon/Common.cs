@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -67,6 +68,28 @@ namespace WADCommon
         public static int GetInt32Le(byte[] buffer, int offset)
         {
             return buffer[offset + 3] << 24 | buffer[offset + 2] << 16 | buffer[offset + 1] << 8 | buffer[offset];
+        }
+
+        public static byte[] ScaleImage(byte[] imageData, int originalWidth, int originalHeight, int newWidth, int newHeight)
+        {
+            byte[] scaledImage = new byte[newWidth * newHeight];
+            float widthRatio = (float)originalWidth / newWidth;
+            float heightRatio = (float)originalHeight / newHeight;
+
+            for (int y = 0; y < newHeight; y++)
+            {
+                for (int x = 0; x < newWidth; x++)
+                {
+                    int nearestX = (int)Math.Floor(x * widthRatio);
+                    int nearestY = (int)Math.Floor(y * heightRatio);
+
+                    int originalIndex = nearestY * originalWidth + nearestX;
+                    int scaledIndex = y * newWidth + x;
+
+                    scaledImage[scaledIndex] = imageData[originalIndex];
+                }
+            }
+            return scaledImage;
         }
     }
 }
