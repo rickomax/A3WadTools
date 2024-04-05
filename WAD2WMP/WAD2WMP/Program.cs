@@ -95,7 +95,7 @@ namespace WAD2WMP
                                     wdlStreamWriter.Write(WDLHeaderTemplate, wmpFilename, wdlFilename);
                                     wdlStreamWriter.Write(WDLBitmapTemplate, DummyBitmapName, DummyBitmapFilename);
                                     wdlStreamWriter.Write(WDLTextureTemplate, DummyTextureName, DummyBitmapName, Common.AckScale, Common.AckScale);
-                                    
+
                                     var lumps = wadFile.EnumerateLumps().ToArray();
 
                                     Color[] palette = null;
@@ -190,8 +190,13 @@ namespace WAD2WMP
                                                 }
                                                 pixelData = textureData;
                                             }
-                                            else if (insideTextures)
+                                            else if (insidePatches || insideTextures)
                                             {
+                                                if (palette == null)
+                                                {
+                                                    Console.WriteLine($"Skipping image {lump.Name} because a palette has not been found");
+                                                    continue;
+                                                }
                                                 if (textureData.Length >= 2 && textureData[0] == 10 && textureData[1] == 5) //PCX
                                                 {
                                                     ExtractTexture(lump, delegate (BinaryWriter textureWriter)
@@ -199,45 +204,42 @@ namespace WAD2WMP
                                                         textureWriter.Write(textureData);
                                                     }, wdlStreamWriter);
                                                 }
-                                            }
-                                            else if (insidePatches)
-                                            {
-                                                if (palette == null)
+                                                else
                                                 {
-                                                    Console.WriteLine($"Skipping image {lump.Name} because a palette has not been found");
-                                                    continue;
-                                                }
-                                                width = Common.GetInt16Le(textureData, 0);
-                                                height = Common.GetInt16Le(textureData, 2);
-                                                pixelData = new byte[width * height];
-                                                for (var i = 0; i < pixelData.Length; i++)
-                                                {
-                                                    pixelData[i] = 255;
-                                                }
-                                                for (var column = 0; column < width; column++)
-                                                {
-                                                    var pointer = Common.GetInt32Le(textureData, (column * 4) + 8);
-                                                    do
+                                                    width = Common.GetInt16Le(textureData, 0);
+                                                    height = Common.GetInt16Le(textureData, 2);
+                                                    pixelData = new byte[width * height];
+                                                    for (var i = 0; i < pixelData.Length; i++)
                                                     {
-                                                        int postHeight;
-                                                        var row = textureData[pointer];
-                                                        if (row != 255 && (postHeight = textureData[++pointer]) != 255)
+                                                        pixelData[i] = 255;
+                                                    }
+
+                                                    for (var column = 0; column < width; column++)
+                                                    {
+                                                        var pointer = Common.GetInt32Le(textureData, (column * 4) + 8);
+                                                        do
                                                         {
-                                                            pointer++;
-                                                            for (var i = 0; i < postHeight; i++)
+                                                            int postHeight;
+                                                            var row = textureData[pointer];
+                                                            if (row != 255 && (postHeight = textureData[++pointer]) != 255)
                                                             {
-                                                                if (row + i < height && pointer < textureData.Length - 1)
+                                                                pointer++;
+                                                                for (var i = 0; i < postHeight; i++)
                                                                 {
-                                                                    pixelData[((row + i) * width) + column] = textureData[++pointer];
+                                                                    if (row + i < height && pointer < textureData.Length - 1)
+                                                                    {
+                                                                        pixelData[((row + i) * width) + column] = textureData[++pointer];
+                                                                    }
                                                                 }
+
+                                                                pointer++;
                                                             }
-                                                            pointer++;
-                                                        }
-                                                        else
-                                                        {
-                                                            break;
-                                                        }
-                                                    } while (pointer < textureData.Length - 1 && textureData[++pointer] != 255);
+                                                            else
+                                                            {
+                                                                break;
+                                                            }
+                                                        } while (pointer < textureData.Length - 1 && textureData[++pointer] != 255);
+                                                    }
                                                 }
                                             }
                                             if (pixelData != null)

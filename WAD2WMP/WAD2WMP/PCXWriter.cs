@@ -52,7 +52,7 @@ namespace WAD2WMP
             // PCX header
             binaryWriter.Write((byte)10); // manufacturer
             binaryWriter.Write((byte)5); // version
-            binaryWriter.Write((byte)0); // encoding (RLE)
+            binaryWriter.Write((byte)1); // encoding (RLE)
             binaryWriter.Write((byte)8); // bits per pixel
             binaryWriter.Write((ushort)0); // xMin
             binaryWriter.Write((ushort)0); // yMin
@@ -76,8 +76,8 @@ namespace WAD2WMP
                     var index = src[y * width + x];
                     indices[x] = index;
                 }
-                binaryWriter.Write(indices);
-                //WriteScanLineRLE(binaryWriter, indeces);
+                //binaryWriter.Write(indices);
+                WriteScanLineRLE(binaryWriter, indices);
             }
             // palette
             binaryWriter.Write((byte)12);
