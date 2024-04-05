@@ -1,4 +1,4 @@
-﻿namespace WAD2WMP
+﻿namespace WADCommon
 {
     public struct Color
     {

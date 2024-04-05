@@ -1,12 +1,27 @@
 ﻿using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace WADCommon
 {
     public static class Common
     {
+        [DllImport("kernel32", EntryPoint = "GetShortPathName", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetShortPathName(string longPath, StringBuilder shortPath, int bufSize);
 
         public const float AckScale = 16f;
         public const float Scale = 1f / AckScale;
+
+        public static string GetShortName(string sLongFileName)
+        {
+            var buffer = new StringBuilder(259);
+            var len = GetShortPathName(sLongFileName, buffer, buffer.Capacity);
+            if (len == 0)
+            {
+                throw new System.ComponentModel.Win32Exception();
+            }
+            return buffer.ToString();
+        }
 
         public static bool IsValidPath(string path)
         {
@@ -28,15 +43,19 @@ namespace WADCommon
 
         public static byte[] ReadFully(Stream input)
         {
-            byte[] buffer = new byte[16 * 1024];
-            using (MemoryStream ms = new MemoryStream())
+            if (input is MemoryStream memoryStream)
+            {
+                return memoryStream.ToArray();
+            }
+            var buffer = new byte[16 * 1024];
+            using (var outputMemoryStream = new MemoryStream())
             {
                 int read;
                 while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    ms.Write(buffer, 0, read);
+                    outputMemoryStream.Write(buffer, 0, read);
                 }
-                return ms.ToArray();
+                return outputMemoryStream.ToArray();
             }
         }
 

@@ -4,14 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F3E2B17E-07C8-47CC-9DC2-FD013FD72F63}</ProjectGuid>
+    <ProjectGuid>{95024FA9-2B2A-4700-BCDE-770E23A7729F}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>WDL2WAD</RootNamespace>
-    <AssemblyName>WDL2WAD</AssemblyName>
+    <RootNamespace>BmArrayLoader</RootNamespace>
+    <AssemblyName>BmArrayLoader</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -22,7 +22,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,11 +31,11 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -45,29 +44,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Indexmap.cs" />
+    <Compile Include="LbmLoader.cs" />
+    <Compile Include="Loader.cs" />
+    <Compile Include="PcxLoader.cs" />
+    <Compile Include="Printer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\External\BmArrayLoader\BmArrayLoader.csproj">
-      <Project>{95024fa9-2b2a-4700-bcde-770e23a7729f}</Project>
-      <Name>BmArrayLoader</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\External\dwad-net\MarcelJoachimKloubert.DWAD\MarcelJoachimKloubert.DWAD.csproj">
-      <Project>{0c878352-4ab1-49f4-beea-9aa82a48a86c}</Project>
-      <Name>MarcelJoachimKloubert.DWAD</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\WADCommon\WADCommon\WADCommon.csproj">
-      <Project>{AD312047-F48A-4F91-8E1F-3A59FE4202C2}</Project>
-      <Name>WADCommon</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\External\WDL2CS\code\WDL2CS.csproj">
-      <Project>{D128E7C3-C81F-44EF-B7BD-A30CD240DB61}</Project>
-      <Name>WDL2CS</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

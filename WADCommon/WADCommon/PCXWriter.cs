@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace WAD2WMP
+namespace WADCommon
 {
     public class PCXWriter
     {

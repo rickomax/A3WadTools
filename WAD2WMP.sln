@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WAD2WMP", "WAD2WMP\WAD2WMP\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WDL2WAD", "WDL2WAD\WDL2WAD\WDL2WAD.csproj", "{F3E2B17E-07C8-47CC-9DC2-FD013FD72F63}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BmArrayLoader", "External\BmArrayLoader\BmArrayLoader.csproj", "{95024FA9-2B2A-4700-BCDE-770E23A7729F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,14 @@ Global
 		{F3E2B17E-07C8-47CC-9DC2-FD013FD72F63}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F3E2B17E-07C8-47CC-9DC2-FD013FD72F63}.Release|x86.ActiveCfg = Release|Any CPU
 		{F3E2B17E-07C8-47CC-9DC2-FD013FD72F63}.Release|x86.Build.0 = Release|Any CPU
+		{95024FA9-2B2A-4700-BCDE-770E23A7729F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95024FA9-2B2A-4700-BCDE-770E23A7729F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95024FA9-2B2A-4700-BCDE-770E23A7729F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{95024FA9-2B2A-4700-BCDE-770E23A7729F}.Debug|x86.Build.0 = Debug|Any CPU
+		{95024FA9-2B2A-4700-BCDE-770E23A7729F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95024FA9-2B2A-4700-BCDE-770E23A7729F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95024FA9-2B2A-4700-BCDE-770E23A7729F}.Release|x86.ActiveCfg = Release|Any CPU
+		{95024FA9-2B2A-4700-BCDE-770E23A7729F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

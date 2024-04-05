@@ -37,6 +37,21 @@ namespace MarcelJoachimKloubert.DWAD.WADs.Lumps
     /// </summary>
     public class Lump : DisposableBase, ILump
     {
+        private readonly Stream _stream;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream"></param>
+        public Lump(Stream stream = null) : base(null)
+        {
+            if (stream != null)
+            {
+                stream.Flush();
+                _stream = stream;
+            }
+        }
+
         #region Properties (4)
 
         /// <summary>
@@ -87,7 +102,7 @@ namespace MarcelJoachimKloubert.DWAD.WADs.Lumps
             return this.InvokeForDisposable<Stream>(
                 func: (obj) =>
                     {
-                        throw new NotImplementedException();
+                        return _stream;
                     });
         }
 
