@@ -3,14 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using BmArrayLoader;
 using MarcelJoachimKloubert.DWAD;
-using MarcelJoachimKloubert.DWAD.WADs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps;
 using VCCCompiler;
 using WADCommon;
@@ -91,7 +87,6 @@ namespace WDL2WAD
                 var ackTableLump = new Lump(new MemoryStream(ackTableData));
                 ackTableLump.Name = "ACKTABLE";
                 wad.Add(ackTableLump);
-
 
                 var mainPalette = new List<byte>();
 
@@ -257,13 +252,11 @@ namespace WDL2WAD
 
         private static Color[] ExtractPalette(Loader loader)
         {
-            Color[] mainPalette;
-            mainPalette = new Color[256];
+            var mainPalette = new Color[256];
             for (var i = 0; i < 256; i++)
             {
                 mainPalette[i] = new Color(loader.Palette[i][0], loader.Palette[i][1], loader.Palette[i][2]);
             }
-
             return mainPalette;
         }
     }
