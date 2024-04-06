@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace WAD2WMP
         private const string WMPVertexTemplate = "VERTEX\t{0}\t{1}\t0;#{2}\r\n";
         private const string WMPWallTemplate = "WALL\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6};#{7}\r\n";
         private const string WMPRegionTemplate = "REGION\t{0}\t{1}\t{2};#{3}\r\n";
-        private const string WMPThingTemplate = "{0}\t{1}\t{2}\t{3}\t{4};#{5}\r\n";
+        private const string WMPThingTemplate = "{0}\t{1}\t{2}\t{3}\t{4}\t{5};#{6}\r\n";
 
         private const string WDLHeaderTemplate = "VIDEO 320x200;\r\nMAPFILE <{0}.WMP>;\r\nBIND <{1}.WDL>;\r\nNEXUS 50;\r\nCLIP_DIST 1000;\r\nLIGHT_ANGLE 1.0;\r\n";
         private const string WDLRegionTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n\tAMBIENT {3};\r\n}}\r\n";
@@ -45,6 +46,18 @@ namespace WAD2WMP
         private const string DummyTextureName = "DUMMYWALLTEX";
 
         private static char[] Separators = new char[] { ',' };
+
+        private struct AcknexThing
+        {
+            public string Type;
+            public string Name;
+
+            public AcknexThing(string type, string name)
+            {
+                Type = type;
+                Name = name;
+            }
+        }
 
         static void Main(string[] args)
         {
@@ -103,6 +116,8 @@ namespace WAD2WMP
 
                                     var lumps = wadFile.EnumerateLumps().ToArray();
 
+                                    var processedTextures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
                                     Color[] palette = null;
                                     var playPal = lumps.FirstOrDefault(x => x.Name == "PLAYPAL");
                                     if (playPal != null)
@@ -121,7 +136,7 @@ namespace WAD2WMP
                                         ExtractTexture(playPal, delegate (BinaryWriter textureWriter)
                                         {
                                             PCXWriter.WritePCX(pixelData, 256, 1, palette, textureWriter);
-                                        }, wdlStreamWriter, false);
+                                        }, wdlStreamWriter, processedTextures, false);
                                         wdlStreamWriter.Write(WDLPaletteTemplate, "PLAYPAL.PCX");
                                     }
                                     else
@@ -132,10 +147,10 @@ namespace WAD2WMP
                                     var insideTextures = false;
                                     var insideFlats = false;
                                     var insidePatches = false;
-                                    var usedTextures = new HashSet<string>();
-                                    var dummyTextures = new HashSet<string>();
+                                    var availableTextures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                                    var dummyTextures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                                    var ackTable = new Dictionary<short, string>();
+                                    var ackTable = new Dictionary<short, AcknexThing>();
 
                                     foreach (var lump in lumps)
                                     {
@@ -155,7 +170,7 @@ namespace WAD2WMP
                                                                 continue;
                                                             }
                                                             var data = line.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
-                                                            ackTable.Add(short.Parse(data[0]), data[1]);
+                                                            ackTable.Add(short.Parse(data[0]), new AcknexThing(data[1], data[2]));
                                                         }
                                                         continue;
                                                     }
@@ -186,7 +201,7 @@ namespace WAD2WMP
                                             var height = 0;
                                             byte[] pixelData = null;
                                             var textureData = Common.ReadFully(lump.GetStream());
-                                            if (usedTextures.Contains(lump.Name))
+                                            if (availableTextures.Contains(lump.Name))
                                             {
                                                 continue;
                                             }
@@ -215,10 +230,11 @@ namespace WAD2WMP
                                                 }
                                                 if (textureData.Length >= 2 && textureData[0] == 10 && textureData[1] == 5) //PCX
                                                 {
+                                                    availableTextures.Add(lump.Name);
                                                     ExtractTexture(lump, delegate (BinaryWriter textureWriter)
                                                     {
                                                         textureWriter.Write(textureData);
-                                                    }, wdlStreamWriter);
+                                                    }, wdlStreamWriter, processedTextures);
                                                 }
                                                 else
                                                 {
@@ -260,11 +276,11 @@ namespace WAD2WMP
                                             }
                                             if (pixelData != null)
                                             {
-                                                usedTextures.Add(lump.Name);
+                                                availableTextures.Add(lump.Name);
                                                 ExtractTexture(lump, delegate (BinaryWriter textureWriter)
                                                 {
                                                     PCXWriter.WritePCX(pixelData, width, height, palette, textureWriter);
-                                                }, wdlStreamWriter);
+                                                }, wdlStreamWriter, processedTextures);
                                             }
                                         }
                                     }
@@ -299,7 +315,7 @@ namespace WAD2WMP
                                     {
                                         var regionName = $"TREGION{sectorIndex}";
                                         wmpStreamWriter.Write(WMPRegionTemplate, regionName, sector.FloorHeight * Common.Scale, sector.CeilingHeight * Common.Scale, sectorIndex++);
-                                        wdlStreamWriter.Write(WDLRegionTemplate, regionName, forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, usedTextures, dummyTextures, sector.CeilingTexture, true), forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, usedTextures, dummyTextures, sector.FloorTexture, true), sector.LightLevel == 0 ? 0f : sector.LightLevel / 255f);
+                                        wdlStreamWriter.Write(WDLRegionTemplate, regionName, forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.CeilingTexture, true), forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.FloorTexture, true), sector.LightLevel == 0 ? 0f : sector.LightLevel / 255f);
                                     }
 
                                     var wallIndex = 0;
@@ -314,7 +330,7 @@ namespace WAD2WMP
                                         var rightSideSectorIndex = rightSide.SectorIndex + 1;
                                         var leftSideSectorIndex = leftSide == null ? 0 : leftSide.SectorIndex + 1;
                                         wmpStreamWriter.Write(WMPWallTemplate, wallName, vIndex1, vIndex2, leftSideSectorIndex, rightSideSectorIndex, rightSide.XOffset * Common.Scale, rightSide.YOffset != 0 ? (rightSide.YOffset - 5f) * Common.Scale : 0f, wallIndex++);
-                                        wdlStreamWriter.Write(WDLWallTemplate, wallName, forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, usedTextures, dummyTextures, SelectTexture(rightSide.LowerTexture, rightSide.UpperTexture, rightSide.MiddleTexture)));
+                                        wdlStreamWriter.Write(WDLWallTemplate, wallName, forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, SelectTexture(rightSide.LowerTexture, rightSide.UpperTexture, rightSide.MiddleTexture)));
                                     }
 
                                     var thingIndex = 0;
@@ -323,11 +339,11 @@ namespace WAD2WMP
                                     {
                                         if (thing.Type == 1)
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", "",  thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing), thingIndex++);
                                         }
                                         else if (ackTable.TryGetValue(thing.Type, out var acknexThing))
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, acknexThing, thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, acknexThing.Type, acknexThing.Name, thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing), thingIndex++);
                                         }
                                     }
                                     Console.WriteLine("Finished exporting. Press any key to exit");
@@ -342,22 +358,23 @@ namespace WAD2WMP
             Console.ReadKey();
             return;
 
-            string ProcessTexture(StreamWriter wdlStreamWriter, HashSet<string> usedTextures, HashSet<string> dummyTextures, string texture, bool isRegion = false)
+            string ProcessTexture(StreamWriter wdlStreamWriter, HashSet<string> availableTextures, HashSet<string> dummyTextures,   string texture, bool isRegion = false)
             {
                 if (texture == "-")
                 {
                     return DummyTextureName;
                 }
-                if (!usedTextures.Contains(texture) && !dummyTextures.Contains(texture))
+                if (!availableTextures.Contains(texture) && !dummyTextures.Contains(texture))
                 {
                     dummyTextures.Add(texture);
                     Console.WriteLine($"Could not find texture {texture}");
                     WriteTextureAndBitmap(texture, wdlStreamWriter, DummyBitmapFilename);
                 }
+
                 return $"{texture}{(isRegion ? RegionTextureSuffix : WallTextureSuffix)}";
             }
 
-            void ExtractTexture(ILump lump, Action<BinaryWriter> writingDelegate, StreamWriter wdlStreamWriter, bool writeWDL = true)
+            void ExtractTexture(ILump lump, Action<BinaryWriter> writingDelegate, StreamWriter wdlStreamWriter, HashSet<string> processedTextures, bool writeWDL = true)
             {
                 var textureFilename = $"{lump.Name}.pcx";
                 var texturePath = $"{wdlDirectory}\\{textureFilename}";
@@ -367,6 +384,11 @@ namespace WAD2WMP
                     {
                         writingDelegate(textureStream);
                     }
+                }
+                if (!processedTextures.Add(lump.Name))
+                {
+                    Console.WriteLine($"Duplicated texture definition:{lump.Name}");
+                    return;
                 }
                 if (writeWDL)
                 {

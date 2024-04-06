@@ -58,7 +58,7 @@ namespace WDL2WAD
             var result = compiler.Parse(wdlPath, out var code);
             if (result == 0)
             {
-                var thingsTextures = new HashSet<string>();
+                var thingsTextures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 var actorID = 0;
                 var ackTableContents = new StreamWriter(new MemoryStream(), Encoding.ASCII);
@@ -66,12 +66,12 @@ namespace WDL2WAD
 
                 foreach (var thing in compiler.PropertyList["Thing"])
                 {
-                    AddToDecorate(thing, decorateContents, ackTableContents, ref actorID, thingsTextures);
+                    AddToDecorate("thing", thing, decorateContents, ackTableContents, ref actorID, thingsTextures);
                 }
 
                 foreach (var actor in compiler.PropertyList["Actor"])
                 {
-                    AddToDecorate(actor, decorateContents, ackTableContents, ref actorID, thingsTextures);
+                    AddToDecorate("actor", actor, decorateContents, ackTableContents, ref actorID, thingsTextures);
                 }
 
                 var wad = new WADFileBuilder(true);
@@ -232,7 +232,7 @@ namespace WDL2WAD
                 }
             }
 
-            void AddToDecorate(KeyValuePair<string, Dictionary<string, List<List<string>>>> thing, StreamWriter decorateStringBuilder, StreamWriter ackTableStringBuilder, ref int actorID, HashSet<string> thingsTextures)
+            void AddToDecorate(string type, KeyValuePair<string, Dictionary<string, List<List<string>>>> thing, StreamWriter decorateStringBuilder, StreamWriter ackTableStringBuilder, ref int actorID, HashSet<string> thingsTextures)
             {
                 if (thing.Value.TryGetValue("Texture", out var thingTexture) && compiler.PropertyList.TryGetValue("Texture", out var textures))
                 {
@@ -247,7 +247,7 @@ namespace WDL2WAD
                                 {
                                     thingsTextures.Add(thingTextureName);
                                     var finalID = BaseActorID + actorID++;
-                                    ackTableStringBuilder.WriteLine(finalID + "," + thing.Key);
+                                    ackTableStringBuilder.WriteLine($"{finalID},{type},{thing.Key}");
                                     var textureName = thingTextureName.Length > 6 ? thingTextureName.Substring(0, 6) : thingTextureName;
                                     decorateStringBuilder.Write(DecorateActorTemplate, thing.Key, finalID, 16f, textureName);
                                 }
