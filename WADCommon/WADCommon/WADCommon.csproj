@@ -46,6 +46,7 @@
     <Compile Include="OrderedSet.cs" />
     <Compile Include="PCXWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SequentialIDGenerator.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -64,18 +64,19 @@ namespace WDL2WAD
                 var ackTableContents = new StreamWriter(new MemoryStream(), Encoding.ASCII);
                 var decorateContents = new StreamWriter(new MemoryStream(), Encoding.ASCII);
 
+                var uniqueIDs = new Dictionary<string, string>();
+
                 foreach (var thing in compiler.PropertyList["Thing"])
                 {
-                    AddToDecorate("thing", thing, decorateContents, ackTableContents, ref actorID, thingsTextures);
+                    AddToDecorate("thing", uniqueIDs, thing, decorateContents, ackTableContents, ref actorID, thingsTextures);
                 }
 
                 foreach (var actor in compiler.PropertyList["Actor"])
                 {
-                    AddToDecorate("actor", actor, decorateContents, ackTableContents, ref actorID, thingsTextures);
+                    AddToDecorate("actor", uniqueIDs,  actor, decorateContents, ackTableContents, ref actorID, thingsTextures);
                 }
 
                 var wad = new WADFileBuilder(true);
-
 
                 decorateContents.Flush();
                 var deciorateData = Common.ReadFully(decorateContents.BaseStream); //why?
@@ -90,7 +91,6 @@ namespace WDL2WAD
                 wad.Add(ackTableLump);
 
                 var mainPalette = new List<byte>();
-
 
                 foreach (var palette in compiler.PropertyList["Palette"])
                 {
@@ -206,7 +206,7 @@ namespace WDL2WAD
                                     var bitmapLump = new Lump(new MemoryStream(pcxData));
                                     if (thingsTextures.Contains(texture.Key))
                                     {
-                                        bitmapLump.Name = $"{(texture.Key.Length > 6 ? texture.Key.Substring(0, 6) : texture.Key)}A1";
+                                        bitmapLump.Name = $"{GetUniqueID(texture.Key, uniqueIDs)}A1";
                                     }
                                     else
                                     {
@@ -232,7 +232,7 @@ namespace WDL2WAD
                 }
             }
 
-            void AddToDecorate(string type, KeyValuePair<string, Dictionary<string, List<List<string>>>> thing, StreamWriter decorateStringBuilder, StreamWriter ackTableStringBuilder, ref int actorID, HashSet<string> thingsTextures)
+            void AddToDecorate(string type, Dictionary<string, string>uniqueIDs, KeyValuePair<string, Dictionary<string, List<List<string>>>> thing, StreamWriter decorateStringBuilder, StreamWriter ackTableStringBuilder, ref int actorID, HashSet<string> thingsTextures)
             {
                 if (thing.Value.TryGetValue("Texture", out var thingTexture) && compiler.PropertyList.TryGetValue("Texture", out var textures))
                 {
@@ -248,7 +248,7 @@ namespace WDL2WAD
                                     thingsTextures.Add(thingTextureName);
                                     var finalID = BaseActorID + actorID++;
                                     ackTableStringBuilder.WriteLine($"{finalID},{type},{thing.Key}");
-                                    var textureName = thingTextureName.Length > 6 ? thingTextureName.Substring(0, 6) : thingTextureName;
+                                    var textureName = GetUniqueID(thingTextureName, uniqueIDs);
                                     decorateStringBuilder.Write(DecorateActorTemplate, thing.Key, finalID, 16f, textureName);
                                 }
                             }
@@ -289,6 +289,16 @@ namespace WDL2WAD
                 }
                 return loader;
             }
+        }
+
+        private static string GetUniqueID(string name, Dictionary<string, string> uniqueIDs)
+        {
+            if (!uniqueIDs.TryGetValue(name, out var id))
+            {
+                id = SequentialIDGenerator.GenerateNextID();
+                uniqueIDs[name] = id;
+            }
+            return id;
         }
 
         private static Color[] ExtractPalette(Loader loader)
