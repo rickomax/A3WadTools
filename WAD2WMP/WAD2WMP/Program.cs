@@ -457,14 +457,14 @@ namespace WAD2WMP
         private static string FindRegion(IThing thing, int[] sectorScore, ISector[] allSectors, ILinedef[] allLinedefs)
         {
             var thingPoint = new Common.Point(thing.X, thing.Y);
-            if (FindInnerRegion(allSectors, sectorScore, allLinedefs, thingPoint, out var regionIndex))
+            if (FindInnerRegion(sectorScore, allLinedefs, thingPoint, out var regionIndex))
             {
                 return (regionIndex + 1).ToString(CultureInfo.InvariantCulture);
             }
             return "0";
         }
 
-        private static bool FindInnerRegion(ISector[] allSectors, int[] sectorScore, ILinedef[] allLinedefs, Common.Point thingPoint, out int outIndex)
+        private static bool FindInnerRegion(int[] sectorScore, ILinedef[] allLinedefs, Common.Point thingPoint, out int outIndex)
         {
             var indices = Enumerable.Range(0, sectorScore.Length).ToList();
             indices.Sort((a, b) => sectorScore[b].CompareTo(sectorScore[a]));
