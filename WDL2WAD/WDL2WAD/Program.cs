@@ -16,7 +16,7 @@ namespace WDL2WAD
     internal class Program
     {
 
-        private const string DecorateActorTemplate = "Actor {0} : DoomImp {1}\r\n{{\r\n  Radius {2}\r\n  States\r\n  {{\r\n\tSpawn:\r\n\t\t{3} A 1\r\n\t\tloop\r\n  }}\r\n}}\r\n";
+        private const string DecorateActorTemplate = "Actor {0} {1}\r\n{{\r\n  Radius {2}\r\n  States\r\n  {{\r\n\tSpawn:\r\n\t\t{3} A 0\r\n\t\tloop\r\n  }}\r\n}}\r\n";
 
         private const int BaseActorID = 10000;
 
