@@ -347,7 +347,7 @@ namespace WAD2WMP
                                     {
                                         if (thing.Type == 1)
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", "", thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, sectorScore, allLinedefs), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, "player_start", "", thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, sectorScore, allLinedefs), thingIndex++);
                                         }
                                         else if (ackTable.TryGetValue(thing.Type, out var acknexThing))
                                         {
@@ -469,51 +469,52 @@ namespace WAD2WMP
 
         private static bool IsInsideRegion(ILinedef[] allLinedefs, Common.Point point, int sectorIndex)
         {
-            var sectorLines = allLinedefs.Where(x => x.RightSide.SectorIndex == sectorIndex);
+            var sectorLines = allLinedefs.Where(lineDef => lineDef.RightSide.SectorIndex == sectorIndex);
             var polygonSet = new OrderedSet<Common.Point>();
             foreach (var line in sectorLines)
             {
-                var p1 = new Common.Point(line.Start.X, line.Start.Y);
-                if (point.Equals(p1))
+                var lineP1 = new Common.Point(line.Start.X, line.Start.Y);
+                if (point.Equals(lineP1))
                 {
                     return false;
                 }
-                polygonSet.Add(p1);
-                var p2 = new Common.Point(line.End.X, line.End.Y);
-                if (point.Equals(p2))
+                polygonSet.Add(lineP1);
+                var lineP2 = new Common.Point(line.End.X, line.End.Y);
+                if (point.Equals(lineP2))
                 {
                     return false;
                 }
-                polygonSet.Add(p2);
+                polygonSet.Add(lineP2);
             }
             var polygon = new Common.Point[polygonSet.Count];
             polygonSet.CopyTo(polygon, 0);
-            var minX = polygon[0].X;
-            var maxX = polygon[0].X;
-            var minY = polygon[0].Y;
-            var maxY = polygon[0].Y;
-            for (var i = 1; i < polygon.Length; i++)
-            {
-                var q = polygon[i];
-                minX = Math.Min(q.X, minX);
-                maxX = Math.Max(q.X, maxX);
-                minY = Math.Min(q.Y, minY);
-                maxY = Math.Max(q.Y, maxY);
-            }
-            if (point.X < minX || point.X > maxX || point.Y < minY || point.Y > maxY)
-            {
-                return false;
-            }
-            var inside = false;
-            for (int i = 0, j = polygon.Length - 1; i < polygon.Length; j = i++)
-            {
-                if ((polygon[i].Y > point.Y) != (polygon[j].Y > point.Y) &&
-                    point.X < (polygon[j].X - polygon[i].X) * (point.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) + polygon[i].X)
-                {
-                    inside = !inside;
-                }
-            }
-            return inside;
+            return Common.InsidePolygon(polygon, point);
+            //var minX = polygon[0].X;
+            //var maxX = polygon[0].X;
+            //var minY = polygon[0].Y;
+            //var maxY = polygon[0].Y;
+            //for (var i = 1; i < polygon.Length; i++)
+            //{
+            //    var q = polygon[i];
+            //    minX = Math.Min(q.X, minX);
+            //    maxX = Math.Max(q.X, maxX);
+            //    minY = Math.Min(q.Y, minY);
+            //    maxY = Math.Max(q.Y, maxY);
+            //}
+            //if (point.X < minX || point.X > maxX || point.Y < minY || point.Y > maxY)
+            //{
+            //    return false;
+            //}
+            //var inside = false;
+            //for (int i = 0, j = polygon.Length - 1; i < polygon.Length; j = i++)
+            //{
+            //    if ((polygon[i].Y > point.Y) != (polygon[j].Y > point.Y) &&
+            //        point.X < (polygon[j].X - polygon[i].X) * (point.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) + polygon[i].X)
+            //    {
+            //        inside = !inside;
+            //    }
+            //}
+            //return inside;
         }
     }
 }

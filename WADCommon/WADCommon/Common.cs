@@ -94,5 +94,47 @@ namespace WADCommon
             }
             return scaledImage;
         }
+
+        public static bool InsidePolygon(Point[] polygon,  Point p)
+        {
+            double angle = 0;
+            Point p1, p2;
+
+            for (int i = 0; i < polygon.Length; i++)
+            {
+                p1.X = polygon[i].X - p.X;
+                p1.Y = polygon[i].Y - p.Y;
+                p2.X = polygon[(i + 1) % polygon.Length].X - p.X;
+                p2.Y = polygon[(i + 1) % polygon.Length].Y - p.Y;
+                angle += Angle2D(p1.X, p1.Y, p2.X, p2.Y);
+            }
+
+            if (Math.Abs(angle) < Math.PI)
+                return false;
+            else
+                return true;
+        }
+
+        /*
+           Return the angle between two vectors on a plane
+           The angle is from vector 1 to vector 2, positive anticlockwise
+           The result is between -pi -> pi
+        */
+        public static double Angle2D(double x1, double y1, double x2, double y2)
+        {
+            double dtheta, theta1, theta2;
+            const double PI = Math.PI;
+            const double TWOPI = 2 * PI;
+
+            theta1 = Math.Atan2(y1, x1);
+            theta2 = Math.Atan2(y2, x2);
+            dtheta = theta2 - theta1;
+            while (dtheta > PI)
+                dtheta -= TWOPI;
+            while (dtheta < -PI)
+                dtheta += TWOPI;
+
+            return dtheta;
+        }
     }
 }
