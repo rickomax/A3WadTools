@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using MarcelJoachimKloubert.DWAD;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Linedefs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sectors;
+using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sidedefs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Things;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Vertexes;
 using WADCommon;
@@ -45,7 +44,7 @@ namespace WAD2WMP
         private const string DummyBitmapName = "DUMMYBMP";
         private const string DummyTextureName = "DUMMYWALLTEX";
 
-        private static char[] Separators = new char[] { ',' };
+        private static readonly char[] Separators = new char[] { ',' };
 
         private struct AcknexThing
         {
@@ -339,11 +338,11 @@ namespace WAD2WMP
                                     {
                                         if (thing.Type == 1)
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", "",  thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", "",  thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, allSectors, allLinedefs), thingIndex++);
                                         }
                                         else if (ackTable.TryGetValue(thing.Type, out var acknexThing))
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, acknexThing.Type, acknexThing.Name, thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, acknexThing.Type, acknexThing.Name, thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, allSectors, allLinedefs), thingIndex++);
                                         }
                                     }
                                     Console.WriteLine("Finished exporting. Press any key to exit");
@@ -422,8 +421,29 @@ namespace WAD2WMP
         }
 
 
-        private static string FindRegion(IThing thing)
+        private static string FindRegion(IThing thing, ISector[] allSectors, ILinedef[] allLinedefs)
         {
+            var thingPoint = new Common.Point(thing.X, thing.Y);
+            for (var i = 0; i < allSectors.Length; i++)
+            {
+                var index = i;
+                var allInside = true;
+                var sectorLines = allLinedefs.Where(x=>x.RightSide.SectorIndex == index);
+                foreach (var sectorLine in sectorLines)
+                {
+                    var sectorP1 = new Common.Point(sectorLine.Start.X, sectorLine.Start.Y);
+                    var sectorP2 = new Common.Point(sectorLine.End.X, sectorLine.End.Y);
+                    if (Common.SideOfLine(sectorP1, sectorP2, thingPoint) > 0)
+                    {
+                        allInside = false;
+                        break;
+                    }
+                }
+                if (allInside)
+                {
+                    return (index+1).ToString();
+                }
+            }
             return "0";
         }
     }

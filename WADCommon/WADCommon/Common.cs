@@ -13,6 +13,18 @@ namespace WADCommon
         public const float AckScale = 16f;
         public const float Scale = 1f / AckScale;
 
+        public struct Point
+        {
+            public float X;
+            public float Y;
+
+            public Point(short x, short y)
+            {
+                X = x;
+                Y = y;
+            }
+        }
+
         public static string GetShortName(string sLongFileName)
         {
             var buffer = new StringBuilder(259);
@@ -90,6 +102,21 @@ namespace WADCommon
                 }
             }
             return scaledImage;
+        }
+
+        // Function to determine if a point is on the left or right side of a line
+        public static int SideOfLine(Point p1, Point p2, Point testPoint)
+        {
+            var result = (p2.X - p1.X) * (testPoint.Y - p1.Y) - (p2.Y - p1.Y) * (testPoint.X - p1.X);
+            if (result > 0)
+            {
+                return 1; // Test point is on the left side of the line
+            }
+            if (result < 0)
+            {
+                return -1; // Test point is on the right side of the line
+            }
+            return 0; // Test point is on the line
         }
     }
 }
