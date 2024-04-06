@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Color.cs" />
     <Compile Include="Common.cs" />
+    <Compile Include="OrderedSet.cs" />
     <Compile Include="PCXWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

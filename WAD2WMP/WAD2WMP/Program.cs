@@ -14,6 +14,7 @@ using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sidedefs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Things;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Vertexes;
 using WADCommon;
+using static WADCommon.Common;
 
 namespace WAD2WMP
 {
@@ -350,11 +351,11 @@ namespace WAD2WMP
                                     {
                                         if (thing.Type == 1)
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", "", thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, sectorScore, allSectors, allLinedefs), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", "", thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, sectorScore, allLinedefs), thingIndex++);
                                         }
                                         else if (ackTable.TryGetValue(thing.Type, out var acknexThing))
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, acknexThing.Type, acknexThing.Name, thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, sectorScore, allSectors, allLinedefs), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, acknexThing.Type, acknexThing.Name, thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, sectorScore, allLinedefs), thingIndex++);
                                         }
                                     }
                                     Console.WriteLine("Finished exporting. Press any key to exit");
@@ -446,6 +447,7 @@ namespace WAD2WMP
                         var p2 = new Common.Point(innerSectorLine.End.X, innerSectorLine.End.Y);
                         if (IsInsideRegion(allLinedefs, p1, outerSectorIndex) || IsInsideRegion(allLinedefs, p2, outerSectorIndex))
                         {
+                            Console.WriteLine("Sector " + innerSectorIndex + " has a point inside " + outerSectorIndex);
                             sectorScore[innerSectorIndex]++;
                             break;
                         }
@@ -454,7 +456,7 @@ namespace WAD2WMP
             }
         }
 
-        private static string FindRegion(IThing thing, int[] sectorScore, ISector[] allSectors, ILinedef[] allLinedefs)
+        private static string FindRegion(IThing thing, int[] sectorScore, ILinedef[] allLinedefs)
         {
             var thingPoint = new Common.Point(thing.X, thing.Y);
             if (FindInnerRegion(sectorScore, allLinedefs, thingPoint, out var regionIndex))
@@ -483,16 +485,50 @@ namespace WAD2WMP
         private static bool IsInsideRegion(ILinedef[] allLinedefs, Common.Point point, int sectorIndex)
         {
             var sectorLines = allLinedefs.Where(x => x.RightSide.SectorIndex == sectorIndex);
-            foreach (var sectorLine in sectorLines)
+            var polygonSet = new OrderedSet<Common.Point>();
+            foreach (var line in sectorLines)
             {
-                var p1 = new Common.Point(sectorLine.Start.X, sectorLine.Start.Y);
-                var p2 = new Common.Point(sectorLine.End.X, sectorLine.End.Y);
-                if (Common.FindSide(p1, p2, point) > 0)
+                var p1 = new Point(line.Start.X, line.Start.Y);
+                if (point.Equals(p1))
                 {
                     return false;
                 }
+                polygonSet.Add(p1);
+                var p2 = new Point(line.End.X, line.End.Y);
+                if (point.Equals(p2))
+                {
+                    return false;
+                }
+                polygonSet.Add(p2);
             }
-            return true;
+            var polygon = new Point[polygonSet.Count];
+            polygonSet.CopyTo(polygon, 0);
+            var minX = polygon[0].X;
+            var maxX = polygon[0].X;
+            var minY = polygon[0].Y;
+            var maxY = polygon[0].Y;
+            for (var i = 1; i < polygon.Length; i++)
+            {
+                var q = polygon[i];
+                minX = Math.Min(q.X, minX);
+                maxX = Math.Max(q.X, maxX);
+                minY = Math.Min(q.Y, minY);
+                maxY = Math.Max(q.Y, maxY);
+            }
+            if (point.X < minX || point.X > maxX || point.Y < minY || point.Y > maxY)
+            {
+                return false;
+            }
+            var inside = false;
+            for (int i = 0, j = polygon.Length - 1; i < polygon.Length; j = i++)
+            {
+                if ((polygon[i].Y > point.Y) != (polygon[j].Y > point.Y) &&
+                    point.X < (polygon[j].X - polygon[i].X) * (point.Y - polygon[i].Y) / (polygon[j].Y - polygon[i].Y) + polygon[i].X)
+                {
+                    inside = !inside;
+                }
+            }
+            return inside;
         }
     }
 }

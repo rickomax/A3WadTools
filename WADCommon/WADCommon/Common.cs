@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -13,7 +14,7 @@ namespace WADCommon
         public const float AckScale = 16f;
         public const float Scale = 1f / AckScale;
 
-        public struct Point
+        public struct Point 
         {
             public float X;
             public float Y;
@@ -84,43 +85,24 @@ namespace WADCommon
 
         public static byte[] ScaleImage(byte[] imageData, int originalWidth, int originalHeight, int newWidth, int newHeight)
         {
-            byte[] scaledImage = new byte[newWidth * newHeight];
-            float widthRatio = (float)originalWidth / newWidth;
-            float heightRatio = (float)originalHeight / newHeight;
+            var scaledImage = new byte[newWidth * newHeight];
+            var widthRatio = (float)originalWidth / newWidth;
+            var heightRatio = (float)originalHeight / newHeight;
 
-            for (int y = 0; y < newHeight; y++)
+            for (var y = 0; y < newHeight; y++)
             {
-                for (int x = 0; x < newWidth; x++)
+                for (var x = 0; x < newWidth; x++)
                 {
-                    int nearestX = (int)Math.Floor(x * widthRatio);
-                    int nearestY = (int)Math.Floor(y * heightRatio);
+                    var nearestX = (int)Math.Floor(x * widthRatio);
+                    var nearestY = (int)Math.Floor(y * heightRatio);
 
-                    int originalIndex = nearestY * originalWidth + nearestX;
-                    int scaledIndex = y * newWidth + x;
+                    var originalIndex = nearestY * originalWidth + nearestX;
+                    var scaledIndex = y * newWidth + x;
 
                     scaledImage[scaledIndex] = imageData[originalIndex];
                 }
             }
             return scaledImage;
         }
-
-        public static int FindSide(Point a, Point b, Point c)
-        {
-            b.X -= a.X;
-            b.Y -= a.Y;
-            c.X -= a.X;
-            c.Y -= a.Y;
-            var crsProd = b.X * c.Y - b.Y * c.X;
-            if (crsProd > 0f)
-            {
-                return 1;
-            }
-            if (crsProd < 0f)
-            {
-                return -1;
-            }
-            return 0;
-        }
-
     }
 }
