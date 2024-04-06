@@ -45,16 +45,6 @@ namespace WADCommon
             return directory != null && filename.IndexOfAny(invalidChars) < 0;
         }
 
-        public static ushort CalculateHash(string input)
-        {
-            var hash = 0;
-            foreach (var c in input)
-            {
-                hash = c + (hash << 6) + (hash << 16) - hash;
-            }
-            return (ushort)(hash & 0xFFFF);
-        }
-
         public static byte[] ReadFully(Stream input)
         {
             if (input is MemoryStream memoryStream)

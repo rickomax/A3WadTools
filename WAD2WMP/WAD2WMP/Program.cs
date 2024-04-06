@@ -3,18 +3,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
-using System.Reflection;
 using System.Threading;
 using MarcelJoachimKloubert.DWAD;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Linedefs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sectors;
-using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sidedefs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Things;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Vertexes;
 using WADCommon;
-using static WADCommon.Common;
 
 namespace WAD2WMP
 {
@@ -459,27 +455,16 @@ namespace WAD2WMP
         private static string FindRegion(IThing thing, int[] sectorScore, ILinedef[] allLinedefs)
         {
             var thingPoint = new Common.Point(thing.X, thing.Y);
-            if (FindInnerRegion(sectorScore, allLinedefs, thingPoint, out var regionIndex))
+            var regionIndices = Enumerable.Range(0, sectorScore.Length).ToList();
+            regionIndices.Sort((a, b) => sectorScore[b].CompareTo(sectorScore[a]));
+            foreach (var regionIndex in regionIndices)
             {
-                return (regionIndex + 1).ToString(CultureInfo.InvariantCulture);
-            }
-            return "0";
-        }
-
-        private static bool FindInnerRegion(int[] sectorScore, ILinedef[] allLinedefs, Common.Point thingPoint, out int outIndex)
-        {
-            var indices = Enumerable.Range(0, sectorScore.Length).ToList();
-            indices.Sort((a, b) => sectorScore[b].CompareTo(sectorScore[a]));
-            foreach (var index in indices)
-            {
-                if (IsInsideRegion(allLinedefs, thingPoint, index))
+                if (IsInsideRegion(allLinedefs, thingPoint, regionIndex))
                 {
-                    outIndex = index;
-                    return true;
+                    return (regionIndex + 1).ToString();
                 }
             }
-            outIndex = -1;
-            return false;
+            return "0";
         }
 
         private static bool IsInsideRegion(ILinedef[] allLinedefs, Common.Point point, int sectorIndex)
@@ -488,20 +473,20 @@ namespace WAD2WMP
             var polygonSet = new OrderedSet<Common.Point>();
             foreach (var line in sectorLines)
             {
-                var p1 = new Point(line.Start.X, line.Start.Y);
+                var p1 = new Common.Point(line.Start.X, line.Start.Y);
                 if (point.Equals(p1))
                 {
                     return false;
                 }
                 polygonSet.Add(p1);
-                var p2 = new Point(line.End.X, line.End.Y);
+                var p2 = new Common.Point(line.End.X, line.End.Y);
                 if (point.Equals(p2))
                 {
                     return false;
                 }
                 polygonSet.Add(p2);
             }
-            var polygon = new Point[polygonSet.Count];
+            var polygon = new Common.Point[polygonSet.Count];
             polygonSet.CopyTo(polygon, 0);
             var minX = polygon[0].X;
             var maxX = polygon[0].X;
