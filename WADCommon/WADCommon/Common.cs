@@ -104,19 +104,23 @@ namespace WADCommon
             return scaledImage;
         }
 
-        // Function to determine if a point is on the left or right side of a line
-        public static int SideOfLine(Point p1, Point p2, Point testPoint)
+        public static int FindSide(Point a, Point b, Point c)
         {
-            var result = (p2.X - p1.X) * (testPoint.Y - p1.Y) - (p2.Y - p1.Y) * (testPoint.X - p1.X);
-            if (result > 0)
+            b.X -= a.X;
+            b.Y -= a.Y;
+            c.X -= a.X;
+            c.Y -= a.Y;
+            var crsProd = b.X * c.Y - b.Y * c.X;
+            if (crsProd > 0f)
             {
-                return 1; // Test point is on the left side of the line
+                return 1;
             }
-            if (result < 0)
+            if (crsProd < 0f)
             {
-                return -1; // Test point is on the right side of the line
+                return -1;
             }
-            return 0; // Test point is on the line
+            return 0;
         }
+
     }
 }

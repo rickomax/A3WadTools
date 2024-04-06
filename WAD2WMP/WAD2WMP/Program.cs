@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Threading;
 using MarcelJoachimKloubert.DWAD;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps;
@@ -56,6 +58,13 @@ namespace WAD2WMP
                 Type = type;
                 Name = name;
             }
+        }
+
+        private class AcknexRegion
+        {
+            public AcknexRegion Parent;
+            public bool HasChildren;
+            public int Index;
         }
 
         static void Main(string[] args)
@@ -135,7 +144,7 @@ namespace WAD2WMP
                                         ExtractTexture(playPal, delegate (BinaryWriter textureWriter)
                                         {
                                             PCXWriter.WritePCX(pixelData, 256, 1, palette, textureWriter);
-                                        }, wdlStreamWriter, processedTextures, false);
+                                        }, wdlStreamWriter, processedTextures, wdlDirectory, false);
                                         wdlStreamWriter.Write(WDLPaletteTemplate, "PLAYPAL.PCX");
                                     }
                                     else
@@ -233,7 +242,7 @@ namespace WAD2WMP
                                                     ExtractTexture(lump, delegate (BinaryWriter textureWriter)
                                                     {
                                                         textureWriter.Write(textureData);
-                                                    }, wdlStreamWriter, processedTextures);
+                                                    }, wdlStreamWriter, processedTextures, wdlDirectory);
                                                 }
                                                 else
                                                 {
@@ -279,7 +288,7 @@ namespace WAD2WMP
                                                 ExtractTexture(lump, delegate (BinaryWriter textureWriter)
                                                 {
                                                     PCXWriter.WritePCX(pixelData, width, height, palette, textureWriter);
-                                                }, wdlStreamWriter, processedTextures);
+                                                }, wdlStreamWriter, processedTextures, wdlDirectory);
                                             }
                                         }
                                     }
@@ -296,6 +305,9 @@ namespace WAD2WMP
                                     var allLinedefs = lumps
                                         .OfType<ILinedefsLump>()
                                         .SelectMany(x => x.EnumerateLinedefs()).ToArray();
+
+                                    var sectorScore = new int[allSectors.Length];
+                                    BuildSectorScore(sectorScore, allSectors, allLinedefs);
 
                                     wmpStreamWriter.Write(WMPHeaderTemplate);
 
@@ -338,113 +350,149 @@ namespace WAD2WMP
                                     {
                                         if (thing.Type == 1)
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", "",  thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, allSectors, allLinedefs), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", "", thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, sectorScore, allSectors, allLinedefs), thingIndex++);
                                         }
                                         else if (ackTable.TryGetValue(thing.Type, out var acknexThing))
                                         {
-                                            wmpStreamWriter.Write(WMPThingTemplate, acknexThing.Type, acknexThing.Name, thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, allSectors, allLinedefs), thingIndex++);
+                                            wmpStreamWriter.Write(WMPThingTemplate, acknexThing.Type, acknexThing.Name, thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing, sectorScore, allSectors, allLinedefs), thingIndex++);
                                         }
                                     }
                                     Console.WriteLine("Finished exporting. Press any key to exit");
                                     Console.ReadKey();
-                                    return;
                                 }
                             }
                         }
                     }
                 }
             }
-            Console.ReadKey();
-            return;
+        }
 
-            string ProcessTexture(StreamWriter wdlStreamWriter, HashSet<string> availableTextures, HashSet<string> dummyTextures,   string texture, bool isRegion = false)
+        private static string ProcessTexture(StreamWriter wdlStreamWriter, HashSet<string> availableTextures, HashSet<string> dummyTextures, string texture, bool isRegion = false)
+        {
+            if (texture == "-")
             {
-                if (texture == "-")
-                {
-                    return DummyTextureName;
-                }
-                if (!availableTextures.Contains(texture) && !dummyTextures.Contains(texture))
-                {
-                    dummyTextures.Add(texture);
-                    Console.WriteLine($"Could not find texture {texture}");
-                    WriteTextureAndBitmap(texture, wdlStreamWriter, DummyBitmapFilename);
-                }
-
-                return $"{texture}{(isRegion ? RegionTextureSuffix : WallTextureSuffix)}";
+                return DummyTextureName;
+            }
+            if (!availableTextures.Contains(texture) && !dummyTextures.Contains(texture))
+            {
+                dummyTextures.Add(texture);
+                Console.WriteLine($"Could not find texture {texture}");
+                WriteTextureAndBitmap(texture, wdlStreamWriter, DummyBitmapFilename);
             }
 
-            void ExtractTexture(ILump lump, Action<BinaryWriter> writingDelegate, StreamWriter wdlStreamWriter, HashSet<string> processedTextures, bool writeWDL = true)
+            return $"{texture}{(isRegion ? RegionTextureSuffix : WallTextureSuffix)}";
+        }
+
+        private static void ExtractTexture(ILump lump, Action<BinaryWriter> writingDelegate, StreamWriter wdlStreamWriter, HashSet<string> processedTextures, string wdlDirectory, bool writeWDL = true)
+        {
+            var textureFilename = $"{lump.Name}.pcx";
+            var texturePath = $"{wdlDirectory}\\{textureFilename}";
+            if (Common.IsValidPath(texturePath))
             {
-                var textureFilename = $"{lump.Name}.pcx";
-                var texturePath = $"{wdlDirectory}\\{textureFilename}";
-                if (Common.IsValidPath(texturePath))
+                using (var textureStream = new BinaryWriter(File.Create(texturePath)))
                 {
-                    using (var textureStream = new BinaryWriter(File.Create(texturePath)))
-                    {
-                        writingDelegate(textureStream);
-                    }
-                }
-                if (!processedTextures.Add(lump.Name))
-                {
-                    Console.WriteLine($"Duplicated texture definition:{lump.Name}");
-                    return;
-                }
-                if (writeWDL)
-                {
-                    WriteTextureAndBitmap(lump.Name, wdlStreamWriter, textureFilename);
+                    writingDelegate(textureStream);
                 }
             }
-
-            void WriteTextureAndBitmap(string name, StreamWriter wdlStreamWriter, string textureFilename)
+            if (!processedTextures.Add(lump.Name))
             {
-                var bitmapName = $"{name}BMP";
-                var wallTextureName = $"{name}{WallTextureSuffix}";
-                var regionTextureName = $"{name}{RegionTextureSuffix}";
-                wdlStreamWriter.Write(WDLBitmapTemplate, bitmapName, textureFilename);
-                wdlStreamWriter.Write(WDLTextureTemplate, wallTextureName, bitmapName, -Common.AckScale, Common.AckScale);
-                wdlStreamWriter.Write(WDLTextureTemplate, regionTextureName, bitmapName, -Common.AckScale, -Common.AckScale);
+                Console.WriteLine($"Duplicated texture definition:{lump.Name}");
+                return;
             }
-
-
-            string SelectTexture(string a, string b, string c)
+            if (writeWDL)
             {
-                if (a != "-")
-                {
-                    return a;
-                }
-                if (b != "-")
-                {
-                    return b;
-                }
-                return c;
+                WriteTextureAndBitmap(lump.Name, wdlStreamWriter, textureFilename);
             }
         }
 
-
-        private static string FindRegion(IThing thing, ISector[] allSectors, ILinedef[] allLinedefs)
+        private static void WriteTextureAndBitmap(string name, StreamWriter wdlStreamWriter, string textureFilename)
         {
-            var thingPoint = new Common.Point(thing.X, thing.Y);
-            for (var i = 0; i < allSectors.Length; i++)
+            var bitmapName = $"{name}BMP";
+            var wallTextureName = $"{name}{WallTextureSuffix}";
+            var regionTextureName = $"{name}{RegionTextureSuffix}";
+            wdlStreamWriter.Write(WDLBitmapTemplate, bitmapName, textureFilename);
+            wdlStreamWriter.Write(WDLTextureTemplate, wallTextureName, bitmapName, -Common.AckScale, Common.AckScale);
+            wdlStreamWriter.Write(WDLTextureTemplate, regionTextureName, bitmapName, -Common.AckScale, -Common.AckScale);
+        }
+
+        private static string SelectTexture(string a, string b, string c)
+        {
+            if (a != "-")
             {
-                var index = i;
-                var allInside = true;
-                var sectorLines = allLinedefs.Where(x=>x.RightSide.SectorIndex == index);
-                foreach (var sectorLine in sectorLines)
+                return a;
+            }
+            if (b != "-")
+            {
+                return b;
+            }
+            return c;
+        }
+
+        private static void BuildSectorScore(int[] sectorScore, ISector[] allSectors, ILinedef[] allLinedefs)
+        {
+            for (var outerSectorIndex = 0; outerSectorIndex < allSectors.Length; outerSectorIndex++)
+            {
+                for (var innerSectorIndex = 0; innerSectorIndex < allSectors.Length; innerSectorIndex++)
                 {
-                    var sectorP1 = new Common.Point(sectorLine.Start.X, sectorLine.Start.Y);
-                    var sectorP2 = new Common.Point(sectorLine.End.X, sectorLine.End.Y);
-                    if (Common.SideOfLine(sectorP1, sectorP2, thingPoint) > 0)
+                    if (innerSectorIndex == outerSectorIndex)
                     {
-                        allInside = false;
-                        break;
+                        continue;
+                    }
+                    var index = innerSectorIndex;
+                    var innerSectorLines = allLinedefs.Where(x => x.RightSide.SectorIndex == index);
+                    foreach (var innerSectorLine in innerSectorLines)
+                    {
+                        var p1 = new Common.Point(innerSectorLine.Start.X, innerSectorLine.Start.Y);
+                        var p2 = new Common.Point(innerSectorLine.End.X, innerSectorLine.End.Y);
+                        if (IsInsideRegion(allLinedefs, p1, outerSectorIndex) || IsInsideRegion(allLinedefs, p2, outerSectorIndex))
+                        {
+                            sectorScore[innerSectorIndex]++;
+                            break;
+                        }
                     }
                 }
-                if (allInside)
-                {
-                    return (index+1).ToString();
-                }
+            }
+        }
+
+        private static string FindRegion(IThing thing, int[] sectorScore, ISector[] allSectors, ILinedef[] allLinedefs)
+        {
+            var thingPoint = new Common.Point(thing.X, thing.Y);
+            if (FindInnerRegion(allSectors, sectorScore, allLinedefs, thingPoint, out var regionIndex))
+            {
+                return (regionIndex + 1).ToString(CultureInfo.InvariantCulture);
             }
             return "0";
+        }
+
+        private static bool FindInnerRegion(ISector[] allSectors, int[] sectorScore, ILinedef[] allLinedefs, Common.Point thingPoint, out int outIndex)
+        {
+            var indices = Enumerable.Range(0, sectorScore.Length).ToList();
+            indices.Sort((a, b) => sectorScore[b].CompareTo(sectorScore[a]));
+            foreach (var index in indices)
+            {
+                if (IsInsideRegion(allLinedefs, thingPoint, index))
+                {
+                    outIndex = index;
+                    return true;
+                }
+            }
+            outIndex = -1;
+            return false;
+        }
+
+        private static bool IsInsideRegion(ILinedef[] allLinedefs, Common.Point point, int sectorIndex)
+        {
+            var sectorLines = allLinedefs.Where(x => x.RightSide.SectorIndex == sectorIndex);
+            foreach (var sectorLine in sectorLines)
+            {
+                var p1 = new Common.Point(sectorLine.Start.X, sectorLine.Start.Y);
+                var p2 = new Common.Point(sectorLine.End.X, sectorLine.End.Y);
+                if (Common.FindSide(p1, p2, point) > 0)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
