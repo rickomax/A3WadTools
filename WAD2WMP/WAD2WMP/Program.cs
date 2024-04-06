@@ -44,7 +44,7 @@ namespace WAD2WMP
         private const string DummyBitmapName = "DUMMYBMP";
         private const string DummyTextureName = "DUMMYWALLTEX";
 
-        private const string DecorateRegex = "\"Actor\\s*[A-z0-9_]+\\s*:\\s[A-z0-9_]+\\s*([0-9]+)\\s*\\/\\/(.+)\"gm";
+        private static char[] Separators = new char[] { ',' };
 
         static void Main(string[] args)
         {
@@ -135,16 +135,28 @@ namespace WAD2WMP
                                     var usedTextures = new HashSet<string>();
                                     var dummyTextures = new HashSet<string>();
 
+                                    var ackTable = new Dictionary<short, string>();
+
                                     foreach (var lump in lumps)
                                     {
                                         if (!forceDummyTextures)
                                         {
                                             switch (lump.Name)
                                             {
-                                                case "DECORATE": //todo
+                                                case "ACKTABLE": //todo
                                                     {
                                                         var streamReader = new StreamReader(lump.GetStream());
-                                                        var decorate = streamReader.ReadToEnd();
+                                                        var acktableContent = streamReader.ReadToEnd();
+                                                        var lines = acktableContent.Split('\n', '\r');
+                                                        foreach (var line in lines)
+                                                        {
+                                                            if (string.IsNullOrWhiteSpace(line))
+                                                            {
+                                                                continue;
+                                                            }
+                                                            var data = line.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
+                                                            ackTable.Add(short.Parse(data[0]), data[1]);
+                                                        }
                                                         continue;
                                                     }
                                                 case "TX_START":
@@ -312,6 +324,10 @@ namespace WAD2WMP
                                         if (thing.Type == 1)
                                         {
                                             wmpStreamWriter.Write(WMPThingTemplate, "PLAYER_START", thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing), thingIndex++);
+                                        }
+                                        else if (ackTable.TryGetValue(thing.Type, out var acknexThing))
+                                        {
+                                            wmpStreamWriter.Write(WMPThingTemplate, acknexThing, thing.X * Common.Scale, thing.Y * Common.Scale, thing.Angle, FindRegion(thing), thingIndex++);
                                         }
                                     }
                                     Console.WriteLine("Finished exporting. Press any key to exit");
