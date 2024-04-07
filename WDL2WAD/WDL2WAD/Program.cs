@@ -64,16 +64,17 @@ namespace WDL2WAD
                 var ackTableContents = new StreamWriter(new MemoryStream(), Encoding.ASCII);
                 var decorateContents = new StreamWriter(new MemoryStream(), Encoding.ASCII);
 
-                var uniqueIDs = new Dictionary<string, string>();
+                var uniqueIDs = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                var sprites = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
                 foreach (var thing in compiler.PropertyList["Thing"])
                 {
-                    AddToDecorate("thing", uniqueIDs, thing, decorateContents, ackTableContents, ref actorID, thingsTextures);
+                    AddToDecorate("thing", sprites, uniqueIDs, thing, decorateContents, ackTableContents, ref actorID, thingsTextures, compiler);
                 }
 
                 foreach (var actor in compiler.PropertyList["Actor"])
                 {
-                    AddToDecorate("actor", uniqueIDs,  actor, decorateContents, ackTableContents, ref actorID, thingsTextures);
+                    AddToDecorate("actor", sprites, uniqueIDs,  actor, decorateContents, ackTableContents, ref actorID, thingsTextures, compiler);
                 }
 
                 var wad = new WADFileBuilder(true);
@@ -128,101 +129,30 @@ namespace WDL2WAD
                 txStartLump.Name = "TX_START";
                 wad.Add(txStartLump);
 
-                foreach (var texture in compiler.PropertyList["Texture"])
+                foreach (var texture in compiler.PropertyList["Texture"].Where(x => !sprites.Contains(x.Key)))
                 {
-                    if (texture.Value.TryGetValue("Bmaps", out var textureBmaps) && compiler.PropertyList.TryGetValue("Bmap", out var bmaps))
-                    {
-                        var scaleXValue = 16f;
-                        var scaleYValue = 16f;
-                        if (texture.Value.TryGetValue("Scale_xy", out var scaleXY))
-                        {
-                            scaleXValue = float.Parse(scaleXY.First()[0]);
-                            scaleYValue = float.Parse(scaleXY.First()[1]);
-                        }
-                        if (texture.Value.TryGetValue("Scale_x", out var scaleX))
-                        {
-                            scaleXValue = float.Parse(scaleX.First()[0]);
-                        }
-                        if (texture.Value.TryGetValue("Scale_y", out var scaleY))
-                        {
-                            scaleYValue = float.Parse(scaleY.First()[0]);
-                        }
-                        if (scaleXValue == 1f)
-                        {
-                            scaleXValue = 16f;
-                        }
-                        if (scaleYValue == 1f)
-                        {
-                            scaleYValue = 16f;
-                        }
-                        scaleXValue = 16f / scaleXValue;
-                        scaleYValue = 16f / scaleYValue;
-                        if (bmaps.TryGetValue(textureBmaps.First().First(), out var bmap))
-                        {
-                            var x = 0;
-                            var y = 0;
-                            var width = 0;
-                            var height = 0;
-                            if (bmap.TryGetValue("Options", out var bmapOptions))
-                            {
-                                var value = bmapOptions.FirstOrDefault();
-                                if (value != null)
-                                {
-                                    x = int.Parse(value[0]);
-                                    y = int.Parse(value[1]);
-                                    width = int.Parse(value[2]);
-                                    height = int.Parse(value[3]);
-                                }
-                            }
-                            if (bmap.TryGetValue("File", out var bmapFile))
-                            {
-                                var bitmapFilename = bmapFile.First().First().Trim('"');
-                                var bitmapPath = $"{wdlDirectory}\\{bitmapFilename}";
-                                var loader = LoadBitmap(bitmapPath);
-                                if (loader != null)
-                                {
-                                    Indexmap data;
-                                    if (width > 0 && height > 0)
-                                    {
-                                        var tileIndex = loader.GetTile(x, y, width, height);
-                                        data = tileIndex > -1 ? loader.Tiles[tileIndex] : loader.Master;
-                                    }
-                                    else
-                                    {
-                                        data = loader.Master;
-                                    }
-                                    var pixelData = data.Data;
-                                    var newWidth = (int)Math.Max(1, data.Width * scaleXValue);
-                                    var newHeight = (int)Math.Max(1, data.Height * scaleYValue);
-                                    if (newWidth != data.Width || newHeight != data.Height)
-                                    {
-                                        pixelData = Common.ScaleImage(pixelData, data.Width, data.Height, newWidth, newHeight);
-                                    }
-                                    var memoryStream = new MemoryStream();
-                                    var binaryWriter = new BinaryWriter(memoryStream);
-                                    PCXWriter.WritePCX(pixelData, newWidth, newHeight, ExtractPalette(loader), binaryWriter);
-                                    binaryWriter.Flush();
-                                    var pcxData = Common.ReadFully(memoryStream); //why?
-                                    var bitmapLump = new Lump(new MemoryStream(pcxData));
-                                    if (thingsTextures.Contains(texture.Key))
-                                    {
-                                        bitmapLump.Name = $"{GetUniqueID(texture.Key, uniqueIDs)}A1";
-                                    }
-                                    else
-                                    {
-                                        bitmapLump.Name = texture.Key.Length > 8 ? texture.Key.Substring(0, 8) : texture.Key;
-                                    }
-                                    wad.Add(bitmapLump);
-                                }
-                            }
-                        }
-                    }
+                    AddTexture(texture, compiler, wdlDirectory, thingsTextures, uniqueIDs, wad);
                 }
 
                 var txEndStream = new MemoryStream(0);
                 var txEndLump = new Lump(txEndStream);
                 txEndLump.Name = "TX_END";
                 wad.Add(txEndLump);
+
+                var sStartStream = new MemoryStream(0);
+                var sStartLump = new Lump(sStartStream);
+                sStartLump.Name = "S_START";
+                wad.Add(sStartLump);
+
+                foreach (var texture in compiler.PropertyList["Texture"].Where(x => sprites.Contains(x.Key)))
+                {
+                    AddTexture(texture, compiler, wdlDirectory, thingsTextures, uniqueIDs, wad);
+                }
+
+                var sEndStream = new MemoryStream(0);
+                var sEndLump = new Lump(sEndStream);
+                sEndLump.Name = "S_END";
+                wad.Add(sEndLump);
 
                 using (var wadBinaryWriter = new BinaryWriter(File.Create(wadPath)))
                 {
@@ -231,38 +161,145 @@ namespace WDL2WAD
                     wadBinaryWriter.Write(wadData);
                 }
             }
+        }
 
-            void AddToDecorate(string type, Dictionary<string, string>uniqueIDs, KeyValuePair<string, Dictionary<string, List<List<string>>>> thing, StreamWriter decorateStringBuilder, StreamWriter ackTableStringBuilder, ref int actorID, HashSet<string> thingsTextures)
+        private static void AddToDecorate(string type, HashSet<string> sprites, Dictionary<string, string> uniqueIDs, KeyValuePair<string, Dictionary<string, List<List<string>>>> thing, StreamWriter decorateStringBuilder, StreamWriter ackTableStringBuilder, ref int actorID, HashSet<string> thingsTextures, WDLCompiler compiler)
+        {
+            if (thing.Value.TryGetValue("Texture", out var thingTexture) && compiler.PropertyList.TryGetValue("Texture", out var textures))
             {
-                if (thing.Value.TryGetValue("Texture", out var thingTexture) && compiler.PropertyList.TryGetValue("Texture", out var textures))
+                var thingTextureName = thingTexture.First().First();
+                sprites.Add(thingTextureName);
+                if (textures.TryGetValue(thingTextureName, out var texture))
                 {
-                    var thingTextureName = thingTexture.First().First();
-                    if (textures.TryGetValue(thingTextureName, out var texture))
+                    if (texture.TryGetValue("Bmaps", out var textureBmaps) && compiler.PropertyList.TryGetValue("Bmap", out var bmaps))
                     {
-                        if (texture.TryGetValue("Bmaps", out var textureBmaps) && compiler.PropertyList.TryGetValue("Bmap", out var bmaps))
+                        if (bmaps.TryGetValue(textureBmaps.First().First(), out var bmap))
                         {
-                            if (bmaps.TryGetValue(textureBmaps.First().First(), out var bmap))
+                            if (bmap.TryGetValue("File", out var bmapFile))
                             {
-                                if (bmap.TryGetValue("File", out var bmapFile))
-                                {
-                                    thingsTextures.Add(thingTextureName);
-                                    var finalID = BaseActorID + actorID++;
-                                    ackTableStringBuilder.WriteLine($"{finalID},{type},{thing.Key}");
-                                    var textureName = GetUniqueID(thingTextureName, uniqueIDs);
-                                    decorateStringBuilder.Write(DecorateActorTemplate, thing.Key, finalID, 16f, textureName);
-                                }
+                                thingsTextures.Add(thingTextureName);
+                                var finalID = BaseActorID + actorID++;
+                                ackTableStringBuilder.WriteLine($"{finalID},{type},{thing.Key}");
+                                var textureName = GetUniqueID(thingTextureName, uniqueIDs);
+                                decorateStringBuilder.Write(DecorateActorTemplate, thing.Key, finalID, 16f, textureName);
                             }
                         }
                     }
                 }
             }
+        }
 
-            Loader LoadBitmap(string bitmapPath)
+        private static void AddTexture(KeyValuePair<string, Dictionary<string, List<List<string>>>> texture, WDLCompiler compiler, string wdlDirectory, HashSet<string> thingsTextures, Dictionary<string, string> uniqueIDs, WADFileBuilder wad)
+        {
+            if (texture.Value.TryGetValue("Bmaps", out var textureBmaps) && compiler.PropertyList.TryGetValue("Bmap", out var bmaps))
             {
-                Loader loader;
+                var scaleXValue = 16f;
+                var scaleYValue = 16f;
+                if (texture.Value.TryGetValue("Scale_xy", out var scaleXY))
+                {
+                    scaleXValue = float.Parse(scaleXY.First()[0]);
+                    scaleYValue = float.Parse(scaleXY.First()[1]);
+                }
+                if (texture.Value.TryGetValue("Scale_x", out var scaleX))
+                {
+                    scaleXValue = float.Parse(scaleX.First()[0]);
+                }
+                if (texture.Value.TryGetValue("Scale_y", out var scaleY))
+                {
+                    scaleYValue = float.Parse(scaleY.First()[0]);
+                }
+                if (scaleXValue == 1f)
+                {
+                    scaleXValue = 16f;
+                }
+                if (scaleYValue == 1f)
+                {
+                    scaleYValue = 16f;
+                }
+                scaleXValue = 16f / scaleXValue;
+                scaleYValue = 16f / scaleYValue;
+                if (bmaps.TryGetValue(textureBmaps.First().First(), out var bmap))
+                {
+                    var x = 0;
+                    var y = 0;
+                    var width = 0;
+                    var height = 0;
+                    if (bmap.TryGetValue("Options", out var bmapOptions))
+                    {
+                        var value = bmapOptions.FirstOrDefault();
+                        if (value != null)
+                        {
+                            x = int.Parse(value[0]);
+                            y = int.Parse(value[1]);
+                            width = int.Parse(value[2]);
+                            height = int.Parse(value[3]);
+                        }
+                    }
+                    if (bmap.TryGetValue("File", out var bmapFile))
+                    {
+                        var bitmapFilename = bmapFile.First().First().Trim('"');
+                        var bitmapPath = $"{wdlDirectory}\\{bitmapFilename}";
+                        var loader = LoadBitmap(bitmapPath);
+                        if (loader != null)
+                        {
+                            Indexmap data;
+                            if (width > 0 && height > 0)
+                            {
+                                var tileIndex = loader.GetTile(x, y, width, height);
+                                data = tileIndex > -1 ? loader.Tiles[tileIndex] : loader.Master;
+                            }
+                            else
+                            {
+                                data = loader.Master;
+                            }
+                            var pixelData = data.Data;
+                            var newWidth = (int)Math.Max(1, data.Width * scaleXValue);
+                            var newHeight = (int)Math.Max(1, data.Height * scaleYValue);
+                            if (newWidth != data.Width || newHeight != data.Height)
+                            {
+                                pixelData = Common.ScaleImage(pixelData, data.Width, data.Height, newWidth, newHeight);
+                            }
+                            var memoryStream = new MemoryStream();
+                            var binaryWriter = new BinaryWriter(memoryStream);
+                            PCXWriter.WritePCX(pixelData, newWidth, newHeight, ExtractPalette(loader), binaryWriter);
+                            binaryWriter.Flush();
+                            var pcxData = Common.ReadFully(memoryStream); //why?
+                            var bitmapLump = new Lump(new MemoryStream(pcxData));
+                            if (thingsTextures.Contains(texture.Key))
+                            {
+                                bitmapLump.Name = $"{GetUniqueID(texture.Key, uniqueIDs)}A1";
+                            }
+                            else
+                            {
+                                bitmapLump.Name = texture.Key.Length > 8 ? texture.Key.Substring(0, 8) : texture.Key;
+                            }
+                            wad.Add(bitmapLump);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static Loader LoadBitmap(string bitmapPath)
+        {
+            Loader loader;
+            try
+            {
+                loader = new LbmLoader();
+                if (!loader.Load(bitmapPath))
+                {
+                    throw new Exception();
+                }
+            }
+            catch
+            {
+                loader = null;
+            }
+            if (loader == null)
+            {
                 try
                 {
-                    loader = new LbmLoader();
+                    loader = new PcxLoader();
                     if (!loader.Load(bitmapPath))
                     {
                         throw new Exception();
@@ -272,23 +309,8 @@ namespace WDL2WAD
                 {
                     loader = null;
                 }
-                if (loader == null)
-                {
-                    try
-                    {
-                        loader = new PcxLoader();
-                        if (!loader.Load(bitmapPath))
-                        {
-                            throw new Exception();
-                        }
-                    }
-                    catch
-                    {
-                        loader = null;
-                    }
-                }
-                return loader;
             }
+            return loader;
         }
 
         private static string GetUniqueID(string name, Dictionary<string, string> uniqueIDs)
