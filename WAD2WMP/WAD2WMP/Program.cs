@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
+using System.Text.RegularExpressions;
 using System.Threading;
 using MarcelJoachimKloubert.DWAD;
 using MarcelJoachimKloubert.DWAD.WADs;
@@ -409,6 +411,45 @@ namespace WAD2WMP
                                         {
                                             vertexHeights[linedef.StartVertexIndex] = linedef.LeftSide.Sector.FloorHeight;
                                             vertexHeights[linedef.EndVertexIndex] = linedef.LeftSide.Sector.FloorHeight;
+                                            var p1 = ToVector2(linedef.Start);
+                                            var p2 = ToVector2(linedef.End);
+                                            var perpendicular = Perpendicular(p1 - p2);
+                                            var frontSectorLinedefs = allLinedefs.Where(x => x.RightSide.SectorIndex == linedef.RightSide.SectorIndex).ToList();
+                                            float fartestP = 0f;
+                                            foreach (var frontLinedef in frontSectorLinedefs)
+                                            {
+                                                if (frontLinedef.StartVertexIndex == linedef.StartVertexIndex || frontLinedef.StartVertexIndex == linedef.EndVertexIndex ||
+                                                    frontLinedef.EndVertexIndex == linedef.StartVertexIndex || frontLinedef.EndVertexIndex == linedef.StartVertexIndex)
+                                                {
+                                                    continue;
+                                                }
+
+                                                var fp1 = ToVector2(frontLinedef.Start) - p1;
+                                                var fp2 = ToVector2(frontLinedef.End) - p1;
+
+                                                var f1 = Vector2.Dot(perpendicular, fp1) / perpendicular.Length();
+                                                var f2 = Vector2.Dot(perpendicular, fp2) / perpendicular.Length();
+
+                                                fartestP = Math.Max(fartestP, f1);
+                                                fartestP = Math.Max(fartestP, f2);
+                                            }
+                                            foreach (var frontLinedef in frontSectorLinedefs)
+                                            {
+                                                if (frontLinedef.StartVertexIndex == linedef.StartVertexIndex || frontLinedef.StartVertexIndex == linedef.EndVertexIndex ||
+                                                    frontLinedef.EndVertexIndex == linedef.StartVertexIndex || frontLinedef.EndVertexIndex == linedef.StartVertexIndex)
+                                                {
+                                                    continue;
+                                                }
+
+                                                var fp1 = ToVector2(frontLinedef.Start) - p1;
+                                                var fp2 = ToVector2(frontLinedef.End) - p1;
+
+                                                var f1 = Vector2.Dot(perpendicular, fp1) / perpendicular.Length() / fartestP;
+                                                var f2 = Vector2.Dot(perpendicular, fp2) / perpendicular.Length() / fartestP;
+
+                                                vertexHeights[frontLinedef.StartVertexIndex] = (short)Lerp(linedef.LeftSide.Sector.FloorHeight, frontLinedef.RightSide.Sector.FloorHeight, f1);
+                                                vertexHeights[frontLinedef.EndVertexIndex] = (short)Lerp(linedef.LeftSide.Sector.FloorHeight, frontLinedef.RightSide.Sector.FloorHeight, f2);
+                                            }
                                             sectorSlope[linedef.RightSide.SectorIndex] = linedef.SpecialType;
                                         }
                                     }
@@ -525,6 +566,23 @@ namespace WAD2WMP
                 }
             }
         }
+
+        public static float Lerp(float a, float b, float t)
+        {
+            t = Math.Max(0.0f, Math.Min(1.0f, t));
+            return a + (b - a) * t;
+        }
+
+        private static Vector2 Perpendicular(Vector2 vector)
+        {
+            return new Vector2(-vector.Y, vector.X);
+        }
+
+        private static Vector2 ToVector2(IVertex vertex)
+        {
+            return new Vector2(vertex.X, vertex.Y);
+        }
+
 
         private static bool IsLowerFrontSlope(int special, bool udmfMap)
         {
