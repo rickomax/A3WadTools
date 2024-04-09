@@ -76,7 +76,7 @@ namespace MarcelJoachimKloubert.DWAD.WADs.Lumps.Linedefs
         /// <summary>
         /// 
         /// </summary>
-        short SectorTag { get; }
+        short SectorTag { get; set; }
 
         /// <summary>
         /// 
@@ -102,6 +102,32 @@ namespace MarcelJoachimKloubert.DWAD.WADs.Lumps.Linedefs
         /// 
         /// </summary>
         short EndVertexIndex { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        int Arg0 { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        int Arg1 { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        int Arg2 { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        int Arg3 { get; }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        int Arg4 { get; }
 
         #endregion Properties (4)
     }

@@ -92,6 +92,11 @@ namespace MarcelJoachimKloubert.DWAD.WADs
             public short LeftSideIndex { get; set; }
             public short StartVertexIndex { get; set; }
             public short EndVertexIndex { get; set; }
+            public int Arg0 { get; }
+            public int Arg1 { get; }
+            public int Arg2 { get; }
+            public int Arg3 { get; }
+            public int Arg4 { get; }
 
             #endregion Properties (5)
         }

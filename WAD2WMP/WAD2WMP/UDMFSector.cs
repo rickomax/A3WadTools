@@ -20,7 +20,7 @@ namespace WAD2WMP
         public string CeilingTexture { get; set; }
         public short LightLevel { get; set; }
         public short SpecialType { get; set; }
-        public short TagNumber { get; }
+        public short TagNumber { get; set; }
         public ISectorsLump Lump { get; }
     }
 
@@ -45,12 +45,17 @@ namespace WAD2WMP
         public ISidedef RightSide { get; set; }
         public ISidedef LeftSide { get; set; }
         public short Flags { get; }
-        public short SectorTag { get; }
+        public short SectorTag { get; set; }
         public short SpecialType { get; set; }
         public short RightSideIndex { get; set; }
         public short LeftSideIndex { get; set; }
         public short StartVertexIndex { get; set; }
         public short EndVertexIndex { get; set; }
+        public int Arg0 { get; set; }
+        public int Arg1 { get; set; }
+        public int Arg2 { get; set; }
+        public int Arg3 { get; set; }
+        public int Arg4 { get; set; }
     }
     
     public class UDMFThing : IThing
