@@ -5,11 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using MarcelJoachimKloubert.DWAD;
+using MarcelJoachimKloubert.DWAD.WADs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Linedefs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sectors;
+using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sidedefs;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Things;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Vertexes;
+using UdmfParsing.Udmf;
 using WADCommon;
 using static System.Collections.Specialized.BitVector32;
 
@@ -118,10 +121,110 @@ namespace WAD2WMP
                                         wdlStreamWriter.Write(WDLHeaderTemplate, wmpFilename, wdlFilename);
                                     }
 
+                                    var lumps = wadFile.EnumerateLumps().ToList();
+
+                                    var textMap = lumps.FirstOrDefault(x => x.Name == "TEXTMAP");
+                                    List<ISector> allSectors;
+                                    List<IVertex> allVertices;
+                                    List<IThing> allThings;
+                                    List<ILinedef> allLinedefs;
+                                    List<ISidedef> allSidedefs;
+
+                                    bool udmfMap;
+
+                                    if (textMap != null)
+                                    {
+                                        udmfMap = true;
+
+                                        allSectors = new List<ISector>();
+                                        allVertices = new List<IVertex>();
+                                        allThings = new List<IThing>();
+                                        allLinedefs = new List<ILinedef>();
+                                        allSidedefs = new List<ISidedef>();
+
+                                        var mapData = MapData.LoadFromUsingTotallyCustom(textMap.GetStream());
+                                        if (mapData != null)
+                                        {
+                                            foreach (var vertex in mapData.Vertices)
+                                            {
+                                                var newVertex = new UDMFVertex();
+                                                newVertex.X = (short)vertex.X;
+                                                newVertex.Y = (short)vertex.Y;
+                                                allVertices.Add(newVertex);
+                                            }
+
+                                            foreach (var sector in mapData.Sectors)
+                                            {
+                                                var newSector = new UDMFSector();
+                                                newSector.CeilingHeight = (short)sector.HeightCeiling;
+                                                newSector.CeilingTexture = sector.TextureCeiling;
+                                                newSector.FloorHeight = (short)sector.HeightFloor;
+                                                newSector.FloorTexture = sector.TextureFloor;
+                                                newSector.LightLevel = (short)sector.LightLevel;
+                                                newSector.SpecialType = (short)sector.Special;
+                                                allSectors.Add(newSector);
+                                            }
+
+                                            foreach (var sidedef in mapData.SideDefs)
+                                            {
+                                                var newSidedef = new UDMFSidedef();
+                                                newSidedef.SectorIndex = (short)sidedef.Sector;
+                                                newSidedef.Sector = allSectors[sidedef.Sector];
+                                                newSidedef.MiddleTexture = sidedef.TextureMiddle;
+                                                newSidedef.UpperTexture = sidedef.TextureTop;
+                                                newSidedef.LowerTexture = sidedef.TextureBottom;
+                                                newSidedef.XOffset = (short)sidedef.OffsetX;
+                                                newSidedef.YOffset = (short)sidedef.OffsetY;
+                                                allSidedefs.Add(newSidedef);
+                                            }
+
+                                            foreach (var linedef in mapData.LineDefs)
+                                            {
+                                                var newLinedef = new UDMFLinedef();
+                                                newLinedef.StartVertexIndex = (short)linedef.V1;
+                                                newLinedef.EndVertexIndex = (short)linedef.V2;
+                                                newLinedef.Start = allVertices[linedef.V1];
+                                                newLinedef.End = allVertices[linedef.V2];
+                                                newLinedef.RightSideIndex = (short)linedef.SideFront;
+                                                newLinedef.RightSide = allSidedefs[linedef.SideFront];
+                                                newLinedef.LeftSideIndex = (short)linedef.SideBack;
+                                                newLinedef.LeftSide = allSidedefs[linedef.SideBack];
+                                                newLinedef.SpecialType = (short)linedef.Special;
+                                                allLinedefs.Add(newLinedef);
+                                            }
+
+                                            foreach (var thing in mapData.Things)
+                                            {
+                                                var newThing = new UDMFThing();
+                                                newThing.X = (short)thing.X;
+                                                newThing.Y = (short)thing.Y;
+                                                newThing.Angle = (short)thing.Angle;
+                                                newThing.Index = thing.Id;
+                                                newThing.Type = (short)thing.Type;
+                                                allThings.Add(newThing);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        udmfMap = false;
+
+                                        allSectors = lumps
+                                            .OfType<ISectorsLump>()
+                                            .SelectMany(x => x.EnumerateSectors()).ToList();
+                                        allVertices = lumps
+                                            .OfType<IVertexesLump>()
+                                            .SelectMany(x => x.EnumerateVertexes()).ToList();
+                                        allThings = lumps
+                                            .OfType<IThingsLump>()
+                                            .SelectMany(x => x.EnumerateThings()).ToList();
+                                        allLinedefs = lumps
+                                            .OfType<ILinedefsLump>()
+                                            .SelectMany(x => x.EnumerateLinedefs()).ToList();
+                                    }
+
                                     wdlStreamWriter.Write(WDLBitmapTemplate, DummyBitmapName, DummyBitmapFilename);
                                     wdlStreamWriter.Write(WDLTextureTemplate, DummyTextureName, DummyBitmapName, Common.AckScale, Common.AckScale);
-
-                                    var lumps = wadFile.EnumerateLumps().ToArray();
 
                                     var processedTextures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -292,30 +395,17 @@ namespace WAD2WMP
                                         }
                                     }
 
-                                    var allSectors = lumps
-                                        .OfType<ISectorsLump>()
-                                        .SelectMany(x => x.EnumerateSectors()).ToArray();
-                                    var allVertices = lumps
-                                        .OfType<IVertexesLump>()
-                                        .SelectMany(x => x.EnumerateVertexes()).ToArray();
-                                    var allThings = lumps
-                                        .OfType<IThingsLump>()
-                                        .SelectMany(x => x.EnumerateThings()).ToArray();
-                                    var allLinedefs = lumps
-                                        .OfType<ILinedefsLump>()
-                                        .SelectMany(x => x.EnumerateLinedefs()).ToArray();
-
-                                    var sectorScore = new int[allSectors.Length];
+                                    var sectorScore = new int[allSectors.Count];
                                     BuildSectorScore(sectorScore, allSectors, allLinedefs);
 
                                     wmpStreamWriter.Write(WMPHeaderTemplate);
 
-                                    var vertexHeights = new short[allVertices.Length];
-                                    var sectorSlope = new int[allSectors.Length];
+                                    var vertexHeights = new short[allVertices.Count];
+                                    var sectorSlope = new int[allSectors.Count];
 
                                     foreach (var linedef in allLinedefs)
                                     {
-                                        if (linedef.SpecialType == 340 || linedef.SpecialType == 342)
+                                        if (IsLowerFrontSlope(linedef.SpecialType, udmfMap))
                                         {
                                             vertexHeights[linedef.StartVertexIndex] = linedef.LeftSide.Sector.FloorHeight;
                                             vertexHeights[linedef.EndVertexIndex] = linedef.LeftSide.Sector.FloorHeight;
@@ -325,7 +415,7 @@ namespace WAD2WMP
 
                                     var vertexIndex = 0;
                                     wmpStreamWriter.Write(WMPVertexHeaderTemplate);
-                                    for (var i = 0; i < allVertices.Length; i++)
+                                    for (var i = 0; i < allVertices.Count; i++)
                                     {
                                         var vertex = allVertices[i];
                                         wmpStreamWriter.Write(WMPVertexTemplate, vertex.X * Common.Scale, vertex.Y * Common.Scale, vertexHeights[i] * Common.Scale, vertexIndex++);
@@ -344,7 +434,7 @@ namespace WAD2WMP
                                             if (baseSector != null)
                                             {
                                                 var tridimensionalSector = linedef.RightSide.Sector;
-                                                var baseSectorIndex = Array.IndexOf(allSectors, baseSector) + 1;
+                                                var baseSectorIndex = allSectors.IndexOf(baseSector) + 1;
                                                 var regionName = $"TREGION{baseSectorIndex}BELOW";
                                                 //floor, ceil
                                                 wdlStreamWriter.Write(WDLRegionTemplate,
@@ -360,7 +450,7 @@ namespace WAD2WMP
                                         }
                                     }
 
-                                    for (var i = 0; i < allSectors.Length; i++)
+                                    for (var i = 0; i < allSectors.Count; i++)
                                     {
                                         var sector = allSectors[i];
                                         var regionName = $"TREGION{sectorIndex}";
@@ -373,7 +463,7 @@ namespace WAD2WMP
                                                 forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.CeilingTexture, true),
                                                 forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.FloorTexture, true),
                                                 sector.LightLevel == 0 ? 0f : sector.LightLevel / 255f,
-                                                WriteSlope(sectorSlope[i]),
+                                                WriteSlope(sectorSlope[i], udmfMap),
                                                 sector.FloorHeight * Common.Scale,
                                                 sector.CeilingHeight * Common.Scale
                                             );
@@ -389,9 +479,9 @@ namespace WAD2WMP
                                                 forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, tridimensionalSector.FloorTexture, true),
                                                 sector.LightLevel == 0 ? 0f : sector.LightLevel / 255f,
                                                 $"{regionName}BELOW",
-                                                tridimensionalSector.CeilingHeight * Common.Scale, 
+                                                tridimensionalSector.CeilingHeight * Common.Scale,
                                                 sector.CeilingHeight * Common.Scale,
-                                                WriteSlope(sectorSlope[i])
+                                                WriteSlope(sectorSlope[i], udmfMap)
                                             );
                                         }
 
@@ -436,9 +526,21 @@ namespace WAD2WMP
             }
         }
 
-        private static string WriteSlope(int value)
+        private static bool IsLowerFrontSlope(int special, bool udmfMap)
         {
-            return value == 340 || value == 342 ? "FLAGS FLOOR_ASCEND;" : "";
+            if (!udmfMap)
+            {
+                return special == 340;  //doom-legacy
+            }
+            else
+            {
+                return special == 181; //plane-align
+            }
+        }
+
+        private static string WriteSlope(int value, bool udmfMap)
+        {
+            return IsLowerFrontSlope(value, udmfMap) ? "FLAGS FLOOR_ASCEND;" : "";
         }
 
         private static string ProcessTexture(StreamWriter wdlStreamWriter, HashSet<string> availableTextures, HashSet<string> dummyTextures, string texture, bool isRegion = false)
@@ -502,11 +604,11 @@ namespace WAD2WMP
             return c;
         }
 
-        private static void BuildSectorScore(int[] sectorScore, ISector[] allSectors, ILinedef[] allLinedefs)
+        private static void BuildSectorScore(int[] sectorScore, IList<ISector> allSectors, IList<ILinedef> allLinedefs)
         {
-            for (var outerSectorIndex = 0; outerSectorIndex < allSectors.Length; outerSectorIndex++)
+            for (var outerSectorIndex = 0; outerSectorIndex < allSectors.Count; outerSectorIndex++)
             {
-                for (var innerSectorIndex = 0; innerSectorIndex < allSectors.Length; innerSectorIndex++)
+                for (var innerSectorIndex = 0; innerSectorIndex < allSectors.Count; innerSectorIndex++)
                 {
                     if (innerSectorIndex == outerSectorIndex)
                     {
@@ -529,7 +631,7 @@ namespace WAD2WMP
             }
         }
 
-        private static string FindRegion(IThing thing, int[] sectorScore, ILinedef[] allLinedefs)
+        private static string FindRegion(IThing thing, int[] sectorScore, IList<ILinedef> allLinedefs)
         {
             var thingPoint = new Common.Point(thing.X, thing.Y);
             var regionIndices = Enumerable.Range(0, sectorScore.Length).ToList();
@@ -544,7 +646,7 @@ namespace WAD2WMP
             return "0";
         }
 
-        private static bool IsInsideRegion(ILinedef[] allLinedefs, Common.Point point, int sectorIndex)
+        private static bool IsInsideRegion(IList<ILinedef> allLinedefs, Common.Point point, int sectorIndex)
         {
             var sectorLines = allLinedefs.Where(lineDef => lineDef.RightSide.SectorIndex == sectorIndex);
             var polygonSet = new OrderedSet<Common.Point>();

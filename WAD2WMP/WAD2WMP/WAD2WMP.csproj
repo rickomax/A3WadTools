@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UDMFSector.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -54,6 +55,10 @@
     <ProjectReference Include="..\..\External\dwad-net\MarcelJoachimKloubert.DWAD\MarcelJoachimKloubert.DWAD.csproj">
       <Project>{0c878352-4ab1-49f4-beea-9aa82a48a86c}</Project>
       <Name>MarcelJoachimKloubert.DWAD</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\External\UdmfParsing\UdmfParsing.csproj">
+      <Project>{cb35e8fb-f2bd-450f-bf4d-b4b0fc74caa2}</Project>
+      <Name>UdmfParsing</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\WADCommon\WADCommon\WADCommon.csproj">
       <Project>{ad312047-f48a-4f91-8e1f-3a59fe4202c2}</Project>

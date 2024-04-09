@@ -5,4 +5,5 @@
 These tools uses:<br>
 https://github.com/mkloubert/dwad-net<br>
 https://github.com/firoball/WDL2CS<br>
-https://github.com/firoball/BmArrayLoader/blob/main/Loader.cs<br>
+https://github.com/firoball/BmArrayLoader<br>
+https://github.com/davidaramant/csharp-parsing-examples<bR>
