@@ -123,7 +123,6 @@ namespace WAD2WMP
 
                                     var lumps = wadFile.EnumerateLumps().ToList();
 
-                                    var textMap = lumps.FirstOrDefault(x => x.Name == "TEXTMAP");
                                     List<ISector> allSectors;
                                     List<IVertex> allVertices;
                                     List<IThing> allThings;
@@ -132,6 +131,7 @@ namespace WAD2WMP
 
                                     bool udmfMap;
 
+                                    var textMap = lumps.FirstOrDefault(x => x.Name == "TEXTMAP");
                                     if (textMap != null)
                                     {
                                         udmfMap = true;
@@ -186,9 +186,9 @@ namespace WAD2WMP
                                                 newLinedef.Start = allVertices[linedef.V1];
                                                 newLinedef.End = allVertices[linedef.V2];
                                                 newLinedef.RightSideIndex = (short)linedef.SideFront;
-                                                newLinedef.RightSide = allSidedefs[linedef.SideFront];
+                                                newLinedef.RightSide = linedef.SideFront > -1 ? allSidedefs[linedef.SideFront] : null;
                                                 newLinedef.LeftSideIndex = (short)linedef.SideBack;
-                                                newLinedef.LeftSide = allSidedefs[linedef.SideBack];
+                                                newLinedef.LeftSide = linedef.SideBack > 1 ? allSidedefs[linedef.SideBack] : null;
                                                 newLinedef.SpecialType = (short)linedef.Special;
                                                 allLinedefs.Add(newLinedef);
                                             }
