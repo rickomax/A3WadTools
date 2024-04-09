@@ -349,7 +349,7 @@ namespace WAD2WMP
                                                 //floor, ceil
                                                 wdlStreamWriter.Write(WDLRegionTemplate,
                                                     regionName,
-                                                    forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, baseSector.CeilingTexture, true),
+                                                    forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, tridimensionalSector.CeilingTexture, true),
                                                     forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, baseSector.FloorTexture, true),
                                                     tridimensionalSector.LightLevel == 0 ? 0f : tridimensionalSector.LightLevel / 255f,
                                                     "",
@@ -385,7 +385,7 @@ namespace WAD2WMP
                                             wmpStreamWriter.Write(WMPRegionTemplate, regionName, tridimensionalSector.CeilingHeight * Common.Scale, sector.CeilingHeight * Common.Scale, sectorIndex);
                                             wdlStreamWriter.Write(WDLRegionBelowTemplate,
                                                 regionName,
-                                                forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, tridimensionalSector.CeilingTexture, true),
+                                                forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.CeilingTexture, true),
                                                 forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, tridimensionalSector.FloorTexture, true),
                                                 sector.LightLevel == 0 ? 0f : sector.LightLevel / 255f,
                                                 $"{regionName}BELOW",
