@@ -11,6 +11,7 @@ using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sectors;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Things;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Vertexes;
 using WADCommon;
+using static System.Collections.Specialized.BitVector32;
 
 namespace WAD2WMP
 {
@@ -21,14 +22,14 @@ namespace WAD2WMP
         private const string WMPRegionHeaderTemplate = "\r\n\r\n\r\n\r\n#region\tname\tfloor_hgt\tceil_hgt\r\n#---------------------------------\r\n";
         private const string WMPWallsHeaderTemplate = "\r\n\r\n\r\n\r\n#wall\tname vertex vertex\tregion region\toffsx offsy\tindex\r\n#------------------------------------------------------------\r\n";
         private const string WMPThingsHeaderTemplate = "\r\n\r\n\r\n\r\n#player_start\r\n#thing\r\n#actor name xpos ypos angle region index\r\n#---------------------------------------\r\n";
-        private const string WMPVertexTemplate = "VERTEX\t{0}\t{1}\t0;#{2}\r\n";
+        private const string WMPVertexTemplate = "VERTEX\t{0}\t{1}\t{2};#{3}\r\n";
         private const string WMPWallTemplate = "WALL\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6};#{7}\r\n";
         private const string WMPRegionTemplate = "REGION\t{0}\t{1}\t{2};#{3}\r\n";
         private const string WMPThingTemplate = "{0}\t{1}\t{2}\t{3}\t{4}\t{5};#{6}\r\n";
 
         private const string WDLHeaderTemplate = "VIDEO 320x200;\r\nMAPFILE <{0}.WMP>;\r\nBIND <{1}.WDL>;\r\nNEXUS 50;\r\nCLIP_DIST 1000;\r\nLIGHT_ANGLE 1.0;\r\n";
-        private const string WDLRegionTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n\tAMBIENT {3};\r\n}}\r\n";
-        private const string WDLRegionBelowTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n\tAMBIENT {3};\r\n\tBELOW {4};\r\n\tFLOOR_HGT {5};\r\n\tCEIL_HGT {6};\r\n}}\r\n";
+        private const string WDLRegionTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n\tAMBIENT {3};\r\n\t{4}\r\n\tFLOOR_HGT {5};\r\n\tCEIL_HGT {6};\r\n}}\r\n";
+        private const string WDLRegionBelowTemplate = "REGION {0} {{\r\n\tCEIL_TEX {1};\r\n\tFLOOR_TEX {2};\r\n\tAMBIENT {3};\r\n\tBELOW {4};\r\n\tFLOOR_HGT {5};\r\n\tCEIL_HGT {6};\r\n\t{7}\r\n}}\r\n";
         private const string WDLTextureTemplate = "TEXTURE {0} {{\r\n\tSCALE_XY {2}, {3};\r\n\tBMAPS {1};\r\n}}\r\n";
         private const string WDLBitmapTemplate = "BMAP {0} <{1}>;\r\n";
         private const string WDLWallTemplate = "WALL {0} {{\r\n\tTEXTURE {1};\r\n\tFLAGS PORTCULLIS;\r\n}}\r\n";
@@ -309,19 +310,59 @@ namespace WAD2WMP
 
                                     wmpStreamWriter.Write(WMPHeaderTemplate);
 
+                                    var vertexHeights = new short[allVertices.Length];
+                                    var sectorSlope = new int[allSectors.Length];
+
+                                    foreach (var linedef in allLinedefs)
+                                    {
+                                        if (linedef.SpecialType == 340 || linedef.SpecialType == 342)
+                                        {
+                                            vertexHeights[linedef.StartVertexIndex] = linedef.LeftSide.Sector.FloorHeight;
+                                            vertexHeights[linedef.EndVertexIndex] = linedef.LeftSide.Sector.FloorHeight;
+                                            sectorSlope[linedef.RightSide.SectorIndex] = linedef.SpecialType;
+                                        }
+                                    }
+
                                     var vertexIndex = 0;
                                     wmpStreamWriter.Write(WMPVertexHeaderTemplate);
-                                    foreach (var vertex in allVertices)
+                                    for (var i = 0; i < allVertices.Length; i++)
                                     {
-                                        wmpStreamWriter.Write(WMPVertexTemplate, vertex.X * Common.Scale, vertex.Y * Common.Scale, vertexIndex++);
+                                        var vertex = allVertices[i];
+                                        wmpStreamWriter.Write(WMPVertexTemplate, vertex.X * Common.Scale, vertex.Y * Common.Scale, vertexHeights[i] * Common.Scale, vertexIndex++);
                                     }
 
                                     var sectorIndex = 0;
                                     wmpStreamWriter.Write(WMPRegionHeaderTemplate);
                                     wmpStreamWriter.Write(WMPRegionTemplate, BorderRegionName, 0f, 0f, sectorIndex++);
-                                    wdlStreamWriter.Write(WDLRegionTemplate, BorderRegionName, DummyTextureName, DummyTextureName, 1f);
-                                    foreach (var sector in allSectors)
+                                    wdlStreamWriter.Write(WDLRegionTemplate, BorderRegionName, DummyTextureName, DummyTextureName, 1f, "", 0f, 0f);
+
+                                    foreach (var linedef in allLinedefs)
                                     {
+                                        if (linedef.SpecialType >= 281 && linedef.SpecialType <= 300)
+                                        {
+                                            var baseSector = allSectors.FirstOrDefault(x => x.TagNumber == linedef.SectorTag);
+                                            if (baseSector != null)
+                                            {
+                                                var tridimensionalSector = linedef.RightSide.Sector;
+                                                var baseSectorIndex = Array.IndexOf(allSectors, baseSector) + 1;
+                                                var regionName = $"TREGION{baseSectorIndex}BELOW";
+                                                //floor, ceil
+                                                wdlStreamWriter.Write(WDLRegionTemplate,
+                                                    regionName,
+                                                    forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, baseSector.CeilingTexture, true),
+                                                    forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, baseSector.FloorTexture, true),
+                                                    tridimensionalSector.LightLevel == 0 ? 0f : tridimensionalSector.LightLevel / 255f,
+                                                    "",
+                                                    baseSector.FloorHeight * Common.Scale,
+                                                    tridimensionalSector.FloorHeight * Common.Scale
+                                                );
+                                            }
+                                        }
+                                    }
+
+                                    for (var i = 0; i < allSectors.Length; i++)
+                                    {
+                                        var sector = allSectors[i];
                                         var regionName = $"TREGION{sectorIndex}";
                                         var tridimensionalLinedef = allLinedefs.FirstOrDefault(x => x.SectorTag == sector.TagNumber && x.SpecialType >= 281 && x.SpecialType <= 300);
                                         if (tridimensionalLinedef == null)
@@ -331,18 +372,29 @@ namespace WAD2WMP
                                                 regionName,
                                                 forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.CeilingTexture, true),
                                                 forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.FloorTexture, true),
-                                                sector.LightLevel == 0 ? 0f : sector.LightLevel / 255f);
+                                                sector.LightLevel == 0 ? 0f : sector.LightLevel / 255f,
+                                                WriteSlope(sectorSlope[i]),
+                                                sector.FloorHeight * Common.Scale,
+                                                sector.CeilingHeight * Common.Scale
+                                            );
                                         }
                                         else
                                         {
-                                            var aboveSector = tridimensionalLinedef.RightSide.Sector;
-                                            wmpStreamWriter.Write(WMPRegionTemplate, regionName, sector.FloorHeight * Common.Scale, aboveSector.FloorHeight * Common.Scale, sectorIndex);
-                                            wdlStreamWriter.Write(WDLRegionTemplate,
+                                            //floor, ceil
+                                            var tridimensionalSector = tridimensionalLinedef.RightSide.Sector;
+                                            wmpStreamWriter.Write(WMPRegionTemplate, regionName, tridimensionalSector.CeilingHeight * Common.Scale, sector.CeilingHeight * Common.Scale, sectorIndex);
+                                            wdlStreamWriter.Write(WDLRegionBelowTemplate,
                                                 regionName,
-                                                forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.CeilingTexture, true),
-                                                forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.FloorTexture, true),
-                                                sector.LightLevel == 0 ? 0f : sector.LightLevel / 255f);
+                                                forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, tridimensionalSector.CeilingTexture, true),
+                                                forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, tridimensionalSector.FloorTexture, true),
+                                                sector.LightLevel == 0 ? 0f : sector.LightLevel / 255f,
+                                                $"{regionName}BELOW",
+                                                tridimensionalSector.CeilingHeight * Common.Scale, 
+                                                sector.CeilingHeight * Common.Scale,
+                                                WriteSlope(sectorSlope[i])
+                                            );
                                         }
+
                                         sectorIndex++;
                                     }
 
@@ -359,24 +411,6 @@ namespace WAD2WMP
                                         var leftSideSectorIndex = leftSide == null ? 0 : leftSide.SectorIndex + 1;
                                         wmpStreamWriter.Write(WMPWallTemplate, wallName, vIndex1, vIndex2, leftSideSectorIndex, rightSideSectorIndex, rightSide.XOffset * Common.Scale, rightSide.YOffset != 0 ? (rightSide.YOffset - 5f) * Common.Scale : 0f, wallIndex++);
                                         wdlStreamWriter.Write(WDLWallTemplate, wallName, forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, SelectTexture(rightSide.LowerTexture, rightSide.UpperTexture, rightSide.MiddleTexture)));
-                                        if (linedef.SpecialType >= 281 && linedef.SpecialType <= 300)
-                                        {
-                                            var belowSector = allSectors.FirstOrDefault(x => x.TagNumber == linedef.SectorTag);
-                                            if (belowSector != null)
-                                            {
-                                                var aboveSector = linedef.RightSide.Sector;
-                                                var belowSectorIndex = Array.IndexOf(allSectors, belowSector) + 1;
-                                                var belowRegionName = $"TREGION{belowSectorIndex}";
-                                                var regionName = $"{belowRegionName}ABOVE";
-                                                wdlStreamWriter.Write(WDLRegionBelowTemplate,
-                                                    regionName,
-                                                    forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, aboveSector.CeilingTexture, true),
-                                                    forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, aboveSector.FloorTexture, true),
-                                                    aboveSector.LightLevel == 0 ? 0f : aboveSector.LightLevel / 255f, belowRegionName,
-                                                    aboveSector.CeilingHeight * Common.Scale,
-                                                    belowSector.CeilingHeight * Common.Scale);
-                                            }
-                                        }
                                     }
 
                                     var thingIndex = 0;
@@ -400,6 +434,11 @@ namespace WAD2WMP
                     }
                 }
             }
+        }
+
+        private static string WriteSlope(int value)
+        {
+            return value == 340 || value == 342 ? "FLAGS FLOOR_ASCEND;" : "";
         }
 
         private static string ProcessTexture(StreamWriter wdlStreamWriter, HashSet<string> availableTextures, HashSet<string> dummyTextures, string texture, bool isRegion = false)
