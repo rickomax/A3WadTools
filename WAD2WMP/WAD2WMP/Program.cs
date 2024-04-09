@@ -409,21 +409,16 @@ namespace WAD2WMP
                                     {
                                         if (IsLowerFrontSlope(linedef.SpecialType, udmfMap))
                                         {
-                                            vertexHeights[linedef.StartVertexIndex] = linedef.LeftSide.Sector.FloorHeight;
-                                            vertexHeights[linedef.EndVertexIndex] = linedef.LeftSide.Sector.FloorHeight;
+                                            var leftSideSector = linedef.LeftSide.Sector;
+                                            vertexHeights[linedef.StartVertexIndex] = leftSideSector.FloorHeight;
+                                            vertexHeights[linedef.EndVertexIndex] = leftSideSector.FloorHeight;
                                             var p1 = ToVector2(linedef.Start);
                                             var p2 = ToVector2(linedef.End);
                                             var perpendicular = Perpendicular(p1 - p2);
                                             var frontSectorLinedefs = allLinedefs.Where(x => x.RightSide.SectorIndex == linedef.RightSide.SectorIndex).ToList();
-                                            float fartestP = 0f;
+                                            var fartestP = 0f;
                                             foreach (var frontLinedef in frontSectorLinedefs)
                                             {
-                                                if (frontLinedef.StartVertexIndex == linedef.StartVertexIndex || frontLinedef.StartVertexIndex == linedef.EndVertexIndex ||
-                                                    frontLinedef.EndVertexIndex == linedef.StartVertexIndex || frontLinedef.EndVertexIndex == linedef.StartVertexIndex)
-                                                {
-                                                    continue;
-                                                }
-
                                                 var fp1 = ToVector2(frontLinedef.Start) - p1;
                                                 var fp2 = ToVector2(frontLinedef.End) - p1;
 
@@ -435,20 +430,16 @@ namespace WAD2WMP
                                             }
                                             foreach (var frontLinedef in frontSectorLinedefs)
                                             {
-                                                if (frontLinedef.StartVertexIndex == linedef.StartVertexIndex || frontLinedef.StartVertexIndex == linedef.EndVertexIndex ||
-                                                    frontLinedef.EndVertexIndex == linedef.StartVertexIndex || frontLinedef.EndVertexIndex == linedef.StartVertexIndex)
-                                                {
-                                                    continue;
-                                                }
-
                                                 var fp1 = ToVector2(frontLinedef.Start) - p1;
                                                 var fp2 = ToVector2(frontLinedef.End) - p1;
 
                                                 var f1 = Vector2.Dot(perpendicular, fp1) / perpendicular.Length() / fartestP;
                                                 var f2 = Vector2.Dot(perpendicular, fp2) / perpendicular.Length() / fartestP;
 
-                                                vertexHeights[frontLinedef.StartVertexIndex] = (short)Lerp(linedef.LeftSide.Sector.FloorHeight, frontLinedef.RightSide.Sector.FloorHeight, f1);
-                                                vertexHeights[frontLinedef.EndVertexIndex] = (short)Lerp(linedef.LeftSide.Sector.FloorHeight, frontLinedef.RightSide.Sector.FloorHeight, f2);
+                                                var rightSideSector = frontLinedef.RightSide.Sector;
+
+                                                vertexHeights[frontLinedef.StartVertexIndex] = (short)(Lerp(leftSideSector.FloorHeight, rightSideSector.FloorHeight, f1));
+                                                vertexHeights[frontLinedef.EndVertexIndex] = (short)(Lerp(leftSideSector.FloorHeight, rightSideSector.FloorHeight, f2));
                                             }
                                             sectorSlope[linedef.RightSide.SectorIndex] = linedef.SpecialType;
                                         }
@@ -469,26 +460,26 @@ namespace WAD2WMP
 
                                     foreach (var linedef in allLinedefs)
                                     {
-                                        if (linedef.SpecialType >= 281 && linedef.SpecialType <= 300)
-                                        {
-                                            var baseSector = allSectors.FirstOrDefault(x => x.TagNumber == linedef.SectorTag);
-                                            if (baseSector != null)
-                                            {
-                                                var tridimensionalSector = linedef.RightSide.Sector;
-                                                var baseSectorIndex = allSectors.IndexOf(baseSector) + 1;
-                                                var regionName = $"TREGION{baseSectorIndex}BELOW";
-                                                //floor, ceil
-                                                wdlStreamWriter.Write(WDLRegionTemplate,
-                                                    regionName,
-                                                    forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, tridimensionalSector.CeilingTexture, true),
-                                                    forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, baseSector.FloorTexture, true),
-                                                    tridimensionalSector.LightLevel == 0 ? 0f : tridimensionalSector.LightLevel / 255f,
-                                                    "",
-                                                    baseSector.FloorHeight * Common.Scale,
-                                                    tridimensionalSector.FloorHeight * Common.Scale
-                                                );
-                                            }
-                                        }
+                                        //if (linedef.SpecialType >= 281 && linedef.SpecialType <= 300)
+                                        //{
+                                        //    var baseSector = allSectors.FirstOrDefault(x => x.TagNumber == linedef.SectorTag);
+                                        //    if (baseSector != null)
+                                        //    {
+                                        //        var tridimensionalSector = linedef.RightSide.Sector;
+                                        //        var baseSectorIndex = allSectors.IndexOf(baseSector) + 1;
+                                        //        var regionName = $"TREGION{baseSectorIndex}BELOW";
+                                        //        //floor, ceil
+                                        //        wdlStreamWriter.Write(WDLRegionTemplate,
+                                        //            regionName,
+                                        //            forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, tridimensionalSector.CeilingTexture, true),
+                                        //            forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, baseSector.FloorTexture, true),
+                                        //            tridimensionalSector.LightLevel == 0 ? 0f : tridimensionalSector.LightLevel / 255f,
+                                        //            "",
+                                        //            baseSector.FloorHeight * Common.Scale,
+                                        //            tridimensionalSector.FloorHeight * Common.Scale
+                                        //        );
+                                        //    }
+                                        //}
                                     }
 
                                     for (var i = 0; i < allSectors.Count; i++)
@@ -498,14 +489,14 @@ namespace WAD2WMP
                                         var tridimensionalLinedef = allLinedefs.FirstOrDefault(x => x.SectorTag == sector.TagNumber && x.SpecialType >= 281 && x.SpecialType <= 300);
                                         if (tridimensionalLinedef == null)
                                         {
-                                            wmpStreamWriter.Write(WMPRegionTemplate, regionName, sector.FloorHeight * Common.Scale, sector.CeilingHeight * Common.Scale, sectorIndex);
+                                            wmpStreamWriter.Write(WMPRegionTemplate, regionName, sectorSlope[i] == 0 ? sector.FloorHeight * Common.Scale : 0, sector.CeilingHeight * Common.Scale, sectorIndex);
                                             wdlStreamWriter.Write(WDLRegionTemplate,
                                                 regionName,
                                                 forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.CeilingTexture, true),
                                                 forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, sector.FloorTexture, true),
                                                 sector.LightLevel == 0 ? 0f : sector.LightLevel / 255f,
                                                 WriteSlope(sectorSlope[i], udmfMap),
-                                                sector.FloorHeight * Common.Scale,
+                                                sectorSlope[i] == 0 ? sector.FloorHeight * Common.Scale : 0,
                                                 sector.CeilingHeight * Common.Scale
                                             );
                                         }
