@@ -540,7 +540,7 @@ namespace WAD2WMP
                                         var rightSideSectorIndex = rightSide.SectorIndex + 1;
                                         var leftSideSectorIndex = leftSide == null ? 0 : leftSide.SectorIndex + 1;
                                         wmpStreamWriter.Write(WMPWallTemplate, wallName, vIndex1, vIndex2, leftSideSectorIndex, rightSideSectorIndex, rightSide.XOffset * Common.Scale, rightSide.YOffset != 0 ? (rightSide.YOffset - 5f) * Common.Scale : 0f, wallIndex++);
-                                        wdlStreamWriter.Write(WDLWallTemplate, wallName, forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, SelectTexture(rightSide.LowerTexture, rightSide.UpperTexture, rightSide.MiddleTexture)));
+                                        wdlStreamWriter.Write(WDLWallTemplate, wallName, forceDummyTextures ? DummyTextureName : ProcessTexture(wdlStreamWriter, availableTextures, dummyTextures, SelectTexture(leftSide, rightSide, linedef)));
                                     }
 
                                     var thingIndex = 0;
@@ -569,7 +569,7 @@ namespace WAD2WMP
         private static ILinedef GetTridimensonalLinedefs(List<ILinedef> allLinedefs, ISector sector, bool udmfMap)
         {
             return !udmfMap ?
-                allLinedefs.FirstOrDefault(x => x.SectorTag == sector.TagNumber && x.SpecialType >= 281 && x.SpecialType <= 300) : 
+                allLinedefs.FirstOrDefault(x => x.SectorTag == sector.TagNumber && x.SpecialType >= 281 && x.SpecialType <= 300) :
                 allLinedefs.FirstOrDefault(x => x.SectorTag == sector.TagNumber && x.SpecialType == 160 && x.Arg1 == 1);
         }
 
@@ -672,17 +672,67 @@ namespace WAD2WMP
             wdlStreamWriter.Write(WDLTextureTemplate, regionTextureName, bitmapName, -Common.AckScale, -Common.AckScale);
         }
 
-        private static string SelectTexture(string a, string b, string c)
+        private static string SelectTexture(ISidedef leftSide, ISidedef rightSide, ILinedef linedef)
         {
-            if (a != "-")
+            if (linedef.LeftSide?.Sector == null)
             {
-                return a;
+                if (rightSide.MiddleTexture != "-")
+                {
+                    return rightSide.MiddleTexture;
+                }
             }
-            if (b != "-")
+            else if (linedef.RightSide?.Sector == null)
             {
-                return b;
+                if (leftSide.MiddleTexture != "-")
+                {
+                    return leftSide.MiddleTexture;
+                }
             }
-            return c;
+            else
+            {
+                var topGap = Math.Abs(linedef.RightSide.Sector.CeilingHeight - linedef.LeftSide.Sector.CeilingHeight);
+                var bottomGap = Math.Abs(linedef.RightSide.Sector.FloorHeight - linedef.LeftSide.Sector.FloorHeight);
+                if (topGap == 0 && bottomGap == 0)
+                {
+                    if (linedef.RightSide.MiddleTexture == "-")
+                    {
+                        if (linedef.LeftSide.MiddleTexture != "-")
+                        {
+                            return linedef.LeftSide.MiddleTexture;
+                        }
+                    }
+                    else
+                    {
+                        return linedef.RightSide.MiddleTexture;
+                    }
+                }
+                else if (topGap > bottomGap)
+                {
+                    if (linedef.RightSide.UpperTexture == "-")
+                    {
+                        if (linedef.LeftSide.UpperTexture != "-")
+                        {
+                            return linedef.LeftSide.UpperTexture;
+                        }
+                    }
+                    else
+                    {
+                        return linedef.RightSide.UpperTexture;
+                    }
+                }
+                if (linedef.RightSide.LowerTexture == "-")
+                {
+                    if (linedef.LeftSide.LowerTexture != "-")
+                    {
+                        return linedef.LeftSide.LowerTexture;
+                    }
+                }
+                else
+                {
+                    return linedef.RightSide.LowerTexture;
+                }
+            }
+            return $"{DummyTextureName}WALLTEX";
         }
 
         private static void BuildSectorScore(int[] sectorScore, IList<ISector> allSectors, IList<ILinedef> allLinedefs)
