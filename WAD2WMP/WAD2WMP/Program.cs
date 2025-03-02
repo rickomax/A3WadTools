@@ -72,7 +72,7 @@ namespace WAD2WMP
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             if (args.Length < 4)
             {
-                Console.WriteLine("WAD2WMP - Usage: <Input WAD Path> <Output WMP Path> <Output WDL Path> <First Map Marker> <Add WDL Header: Y/N> <Optional: Force Dummy Textures Y/N>");
+                Console.WriteLine("WAD2WMP - Usage: <Input WAD Path> <Output WMP Path> <Output WDL Path> <Map Marker> <Add WDL Header: Y/N> <Optional: Force Dummy Textures Y/N>");
                 Console.ReadKey();
                 return;
             }
