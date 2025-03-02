@@ -32,6 +32,8 @@ using MarcelJoachimKloubert.DWAD.WADs.Lumps.Vertexes;
 using System.Collections.Generic;
 using System.Linq;
 using MarcelJoachimKloubert.DWAD.WADs.Lumps.Sidedefs;
+using System.IO;
+using System;
 
 namespace MarcelJoachimKloubert.DWAD.WADs
 {
@@ -42,106 +44,51 @@ namespace MarcelJoachimKloubert.DWAD.WADs
             #region Methods (1)
 
             public IEnumerable<ILinedef> EnumerateLinedefs()
-            {
-                var allVertextes = this.File
-                                       .EnumerateLumps()
-                                       .OfType<IVertexesLump>()
-                                       .SelectMany(x => x.EnumerateVertexes())
-                                       .ToArray();
+{
+                // Get all vertices and sidedefs
+                var allVertices = this.File
+                                     .EnumerateLumps()
+                                     .OfType<IVertexesLump>()
+                                     .SelectMany(x => x.EnumerateVertexes())
+                                     .ToArray();
 
                 var allSidedefs = this.File
-                    .EnumerateLumps()
-                    .OfType<ISidedefsLump>()
-                    .SelectMany(x => x.EnumerateSidedefs())
-                    .ToArray();
+                                      .EnumerateLumps()
+                                      .OfType<ISidedefsLump>()
+                                      .SelectMany(x => x.EnumerateSidedefs())
+                                      .ToArray();
 
                 using (var stream = this.GetStream())
                 {
-                    bool hasNext;
+                    byte[] buffer = new byte[14]; // 14 bytes per Linedef
 
-                    do
+                    while (stream.Read(buffer, 0, buffer.Length) == buffer.Length)
                     {
-                        hasNext = false;
+                        // Parse fields from the buffer
+                        var startVertexIndex = BitConverter.ToInt16(buffer, 0);
+                        var endVertexIndex = BitConverter.ToInt16(buffer, 2);
+                        var flags = BitConverter.ToInt16(buffer, 4);
+                        var specialType = BitConverter.ToInt16(buffer, 6);
+                        var sectorTag = BitConverter.ToInt16(buffer, 8);
+                        var sideDefRight = BitConverter.ToInt16(buffer, 10);
+                        var sideDefLeft = BitConverter.ToInt16(buffer, 12);
 
-                        byte[] buffer;
-
-                        buffer = new byte[2];
-                        if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
+                        // Validate indices
+                        if (startVertexIndex < 0 || startVertexIndex >= allVertices.Length ||
+                            endVertexIndex < 0 || endVertexIndex >= allVertices.Length)
                         {
-                            continue;
+                            throw new InvalidDataException("Invalid vertex index in Linedef.");
                         }
 
-                        // start vertex
-                        var startVertexIndex = ToInt16(buffer).Value;
+                        // Get vertices
+                        var startVertex = allVertices[startVertexIndex];
+                        var endVertex = allVertices[endVertexIndex];
 
-                        buffer = new byte[2];
-                        if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
-                        {
-                            continue;
-                        }
+                        // Get sidedefs (if valid)
+                        var rightSide = sideDefRight >= 0 && sideDefRight < allSidedefs.Length ? allSidedefs[sideDefRight] : null;
+                        var leftSide = sideDefLeft >= 0 && sideDefLeft < allSidedefs.Length ? allSidedefs[sideDefLeft] : null;
 
-                        // end vertex
-                        var endVertexIndex = ToInt16(buffer).Value;
-
-                        buffer = new byte[2];
-                        if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
-                        {
-                            continue;
-                        }
-
-                        // flags
-                        var flags = ToInt16(buffer).Value;
-
-                        buffer = new byte[2];
-                        if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
-                        {
-                            continue;
-                        }
-
-                        // special type
-                        var specialType = ToInt16(buffer).Value;
-
-                        buffer = new byte[2];
-                        if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
-                        {
-                            continue;
-                        }
-
-                        // sector tag
-                        var sectorTag = ToInt16(buffer).Value;
-
-                        buffer = new byte[2];
-                        if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
-                        {
-                            continue;
-                        }
-
-                        // sidedef (right)
-                        var sideDefRight = ToInt16(buffer).Value;
-
-                        buffer = new byte[2];
-                        if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
-                        {
-                            continue;
-                        }
-
-                        // sidedef (left)
-                        var sideDefLeft = ToInt16(buffer).Value;
-
-                        var startVertex = allVertextes.Skip(startVertexIndex).FirstOrDefault();
-                        if (startVertex == null)
-                        {
-                            continue;
-                        }
-
-                        var endVertex = allVertextes.Skip(endVertexIndex).FirstOrDefault();
-                        if (endVertex == null)
-                        {
-                            continue;
-                        }
-
-                        hasNext = true;
-
+                        // Yield the Linedef
                         yield return new Linedef()
                         {
                             End = endVertex,
@@ -149,8 +96,8 @@ namespace MarcelJoachimKloubert.DWAD.WADs
                             Start = startVertex,
                             StartVertexIndex = startVertexIndex,
                             EndVertexIndex = endVertexIndex,
-                            RightSide = sideDefRight > -1 ? allSidedefs[sideDefRight] : null,
-                            LeftSide = sideDefLeft > -1 ? allSidedefs[sideDefLeft] : null,
+                            RightSide = rightSide,
+                            LeftSide = leftSide,
                             RightSideIndex = sideDefRight,
                             LeftSideIndex = sideDefLeft,
                             Flags = flags,
@@ -158,7 +105,6 @@ namespace MarcelJoachimKloubert.DWAD.WADs
                             SpecialType = specialType
                         };
                     }
-                    while (hasNext);
                 }
             }
 
