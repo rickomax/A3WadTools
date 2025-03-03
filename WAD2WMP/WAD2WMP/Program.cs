@@ -579,18 +579,22 @@ namespace WAD2WMP
                                                 case "TX_END":
                                                     insideTextures = false;
                                                     continue;
+                                                case "PP_START":
                                                 case "P1_START":
                                                 case "P2_START":
                                                     insidePatches = true;
                                                     continue;
+                                                case "PP_END":
                                                 case "P1_END":
                                                 case "P2_END":
                                                     insidePatches = false;
                                                     continue;
+                                                case "FF_START":
                                                 case "F1_START":
                                                 case "F2_START":
                                                     insideFlats = true;
                                                     continue;
+                                                case "FF_END":
                                                 case "F1_END":
                                                 case "F2_END":
                                                     insideFlats = false;
