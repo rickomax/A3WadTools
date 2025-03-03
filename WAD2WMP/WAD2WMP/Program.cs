@@ -70,6 +70,24 @@ namespace WAD2WMP
             return a + (b - a) * t;
         }
 
+        private static List<Point> BuildOrderedPolygon(int sectorIndex, IList<ILinedef> allLinedefs)
+        {
+            var sectorLines = allLinedefs.Where(lineDef => lineDef.RightSide.SectorIndex == sectorIndex);
+            var unorderedPoints = new HashSet<Point>();
+            foreach (var line in sectorLines)
+            {
+                unorderedPoints.Add(new Point(line.Start.X, line.Start.Y));
+                unorderedPoints.Add(new Point(line.End.X, line.End.Y));
+            }
+            var pointsList = unorderedPoints.ToList();
+            var centroid = CalculateCentroid(pointsList);
+            pointsList.Sort((a, b) =>
+                Math.Atan2(a.Y - centroid.Y, a.X - centroid.X)
+                    .CompareTo(Math.Atan2(b.Y - centroid.Y, b.X - centroid.X)));
+
+            return pointsList;
+        }
+
         private static Point CalculateCentroid(List<Point> polygon)
         {
             float centroidX = 0f, centroidY = 0f;
@@ -87,26 +105,19 @@ namespace WAD2WMP
             return new Point(centroidX, centroidY);
         }
 
-        private static int CalculateNestingLevel(ISector sector, List<ISector> allSectors, IList<ILinedef> allLinedefs)
+        private static int CalculateNestingLevel(int sectorIndex, List<ISector> allSectors, IList<ILinedef> allLinedefs)
         {
             var nestingLevel = 0;
-
-            foreach (var otherSector in allSectors)
+            var currentPolygon = BuildOrderedPolygon(sectorIndex, allLinedefs);
+            var representativePoint = CalculateCentroid(currentPolygon);
+            for (var i = 0; i < allSectors.Count; i++)
             {
-                if (otherSector == sector)
+                if (i == sectorIndex)
                 {
                     continue;
                 }
-
-                var otherSectorLines = allLinedefs.Where(lineDef => lineDef.RightSide?.Sector == otherSector).ToList();
-
-                var otherPolygon = otherSectorLines
-                    .SelectMany(line => new[] { new Point(line.Start.X, line.Start.Y), new Point(line.End.X, line.End.Y) })
-                    .Distinct()
-                    .ToList();
-
-                var centroid = CalculateCentroid(otherPolygon);
-                if (IsPointInPolygon(centroid, otherPolygon))
+                var otherPolygon = BuildOrderedPolygon(i, allLinedefs);
+                if (IsPointInPolygon(representativePoint, otherPolygon))
                 {
                     nestingLevel++;
                 }
@@ -151,36 +162,24 @@ namespace WAD2WMP
             return textureFilename;
         }
 
-        //todo: fixme
         private static int FindRegion(IThing thing, List<ISector> allSectors, IList<ILinedef> allLinedefs)
         {
-            return 0;
-            var deepestSector = -1;
+            var deepestSectorIndex = -1;
             var deepestNestingLevel = -1;
-
             for (var sectorIndex = 0; sectorIndex < allSectors.Count; sectorIndex++)
             {
-                var sector = allSectors[sectorIndex];
-                var sectorLines = allLinedefs.Where(lineDef => lineDef.RightSide?.SectorIndex == sectorIndex);
-
-                var polygon = sectorLines
-                    .SelectMany(line => new[] { new Point(line.Start.X, line.Start.Y), new Point(line.End.X, line.End.Y) })
-                    .Distinct()
-                    .ToList();
-
+                var polygon = BuildOrderedPolygon(sectorIndex, allLinedefs);
                 if (IsPointInPolygon(new Point(thing.X, thing.Y), polygon))
                 {
-                    var nestingLevel = CalculateNestingLevel(sector, allSectors, allLinedefs);
-
+                    var nestingLevel = CalculateNestingLevel(sectorIndex, allSectors, allLinedefs);
                     if (nestingLevel > deepestNestingLevel)
                     {
                         deepestNestingLevel = nestingLevel;
-                        deepestSector = sectorIndex;
+                        deepestSectorIndex = sectorIndex;
                     }
                 }
             }
-
-            return deepestSector;
+            return deepestSectorIndex;
         }
 
         private static string FixLongName(string wdlDirectory, string name, string extension)
@@ -282,7 +281,6 @@ namespace WAD2WMP
             }
             return result;
         }
-
         static void Main(string[] args)
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
