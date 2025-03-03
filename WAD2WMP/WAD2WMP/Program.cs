@@ -500,7 +500,7 @@ namespace WAD2WMP
                                     var ackTable = new Dictionary<short, AcknexThing>();
 
                                     var patchData = new Dictionary<string, MapPatchData>();
-                                    List<MapTexture> textures = new List<MapTexture>();
+                                    var textures = new List<MapTexture>();
                                     List<string> patchNames = null;
 
                                     foreach (var lump in allLumps)
