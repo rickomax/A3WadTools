@@ -226,7 +226,7 @@ namespace WAD2WMP
         {
             return !udmfMap ?
                 allLinedefs.FirstOrDefault(x => x.SectorTag == sector.TagNumber && x.SpecialType >= 281 && x.SpecialType <= 300) :
-                allLinedefs.FirstOrDefault(x => x.SectorTag == sector.TagNumber && x.SpecialType == 160 && x.Arg1 == 1);
+                allLinedefs.FirstOrDefault(x => x.SectorTag == sector.TagNumber && x.SpecialType == 260 && x.Arg1 == 1);
         }
 
         private static bool Is3DFloor(ILinedef linedef, bool udmfMap)
@@ -236,7 +236,7 @@ namespace WAD2WMP
                 return linedef.SpecialType >= 281 && linedef.SpecialType <= 300;
             }
 
-            var result = linedef.SpecialType == 160 && linedef.Arg1 == 1;
+            var result = linedef.SpecialType == 260 && linedef.Arg1 == 1;
             if (result)
             {
                 linedef.SectorTag = (short)linedef.Arg0; //todo: hack
